@@ -52,16 +52,16 @@ struct is_template_instance_by_value<Template, Template<Args...>> : std::true_ty
 template <template <auto...> class Template, class Instance>
 constexpr bool is_template_instance_by_value_v = is_template_instance_by_value<Template, Instance>::value;
 
-// namespace test
-// {
+namespace test
+{
 
-// template <int x>
-// struct INT
-// {
-// };
+template <int x>
+struct TEST_INT
+{
+};
 
-// static_assert(!is_template_instance_by_value_v<INT, int>);
-// static_assert(is_template_instance_by_value_v<INT, INT<0>>);
+static_assert(!is_template_instance_by_value_v<TEST_INT, int>);
+static_assert(is_template_instance_by_value_v<TEST_INT, TEST_INT<0>>);
 
-// } // namespace test
+} // namespace test
 } // namespace rib::type

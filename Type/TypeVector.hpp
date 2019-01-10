@@ -308,14 +308,31 @@ constexpr auto TypeTuple_merge(Compare compare)
 template <class TypeTuple1, class TypeTuple2, auto compare>
 using TypeTuple_merge_t = decltype(TypeTuple_merge<TypeTuple1, TypeTuple2>(compare));
 
+namespace test_TypeVector
+{
+
+template <int x>
+using INT = std::integral_constant<int, x>;
+
 constexpr auto yes_man = [](auto...) { return true; };
-static_assert(std::is_same_v<decltype(TypeTuple_merge<TypeVector<>, TypeVector<>>(yes_man)), TypeVector<>>);
-// static_assert(std::is_same_v<TypeTuple_merge_t<TypeVector<>, TypeVector<>, [](auto...) { return true; }>, TypeVector<>>);
-// static_assert(std::is_same_v<TypeTuple_merge_t<TypeVector<int>, TypeVector<>, [](auto...) { return true; }>, TypeVector<int>>);
-// static_assert(std::is_same_v<TypeTuple_merge_t<TypeVector<>, TypeVector<int>, [](auto...) { return true; }>, TypeVector<int>>);
-// static_assert(std::is_same_v<TypeTuple_merge_t<TypeVector<int>, TypeVector<char>, [](auto...) { return true; }>, TypeVector<int, char>>);
-// static_assert(std::is_same_v<TypeTuple_merge_t<TypeVector<int, char>, TypeVector<double, float>, [](auto...) { return true; }>, TypeVector<int, char, double, float>>);
-// static_assert(std::is_same_v<TypeTuple_merge_t<TypeVector<int, char>, TypeVector<double, float>, [](auto...) { return false; }>, TypeVector<double, float, int, char>>);
+constexpr auto no_man = [](auto...) { return false; };
+constexpr auto lmd = [](auto x, auto y) -> bool { return (decltype(x)::type::value) < (decltype(y)::type::value); };
+
+static_assert(std::is_same_v<decltype(TypeTuple_merge<TypeVector<>, TypeVector<>>(yes_man)),
+                             TypeVector<>>);
+static_assert(std::is_same_v<decltype(TypeTuple_merge<TypeVector<int>, TypeVector<>>(yes_man)),
+                             TypeVector<int>>);
+static_assert(std::is_same_v<decltype(TypeTuple_merge<TypeVector<>, TypeVector<int>>(yes_man)),
+                             TypeVector<int>>);
+static_assert(std::is_same_v<decltype(TypeTuple_merge<TypeVector<int>, TypeVector<int>>(yes_man)),
+                             TypeVector<int, int>>);
+static_assert(std::is_same_v<decltype(TypeTuple_merge<TypeVector<int>, TypeVector<char>>(no_man)),
+                             TypeVector<char, int>>);
+static_assert(std::is_same_v<decltype(TypeTuple_merge<TypeVector<INT<0>>, TypeVector<INT<1>>>(lmd)),
+                             TypeVector<INT<0>, INT<1>>>);
+static_assert(std::is_same_v<decltype(TypeTuple_merge<TypeVector<INT<1>, INT<3>, INT<4>>, TypeVector<INT<2>, INT<5>>>(lmd)),
+                             TypeVector<INT<1>, INT<2>, INT<3>, INT<4>, INT<5>>>);
+} // namespace test_TypeVector
 
 template <class TypeTuple_, class Compare>
 constexpr auto TypeTuple_sort([[maybe_unused]] Compare compare)
@@ -327,31 +344,27 @@ constexpr auto TypeTuple_sort([[maybe_unused]] Compare compare)
     }
     else
     {
-        using l = decltype(TypeTuple_sort<TypeTuple_left_t<TypeTuple_, s / 2>>(compare));
-        using r = decltype(TypeTuple_sort<TypeTuple_mid_t<TypeTuple_, s / 2>>(compare));
-        return TypeTuple_merge<l, r>(compare);
+        using L = decltype(TypeTuple_sort<TypeTuple_left_t<TypeTuple_, s / 2>>(compare));
+        using R = decltype(TypeTuple_sort<TypeTuple_mid_t<TypeTuple_, s / 2>>(compare));
+        return TypeTuple_merge<L, R>(compare);
     }
 }
 
 template <class TypeTuple_, auto compare>
 using TypeTuple_sort_t = decltype(TypeTuple_sort<TypeTuple_>(compare));
 
-// static_assert(std::is_same_v<TypeTuple_sort_t<TypeVector<>, [](auto...) { return true; }>, TypeVector<>>);
-// static_assert(std::is_same_v<TypeTuple_sort_t<TypeVector<int>, [](auto...) { return true; }>, TypeVector<int>>);
-// static_assert(std::is_same_v<TypeTuple_sort_t<TypeVector<int, char>, [](auto...) { return true; }>, TypeVector<int, char>>);
-namespace test
+namespace test_TypeVector
 {
-
-template <int x>
-using INT = std::integral_constant<int, x>;
-
-constexpr auto lmd = [](auto x, auto y) { return decltype(x)::type::value < decltype(y)::type::value; };
-
+static_assert(std::is_same_v<decltype(TypeTuple_sort<TypeVector<>>(lmd)),
+                             TypeVector<>>);
+static_assert(std::is_same_v<decltype(TypeTuple_sort<TypeVector<INT<1>>>(lmd)),
+                             TypeVector<INT<1>>>);
+static_assert(std::is_same_v<decltype(TypeTuple_sort<TypeVector<INT<1>, INT<2>>>(lmd)),
+                             TypeVector<INT<1>, INT<2>>>);
 static_assert(std::is_same_v<decltype(TypeTuple_sort<TypeVector<INT<1>, INT<2>, INT<3>, INT<4>, INT<5>>>(lmd)),
                              TypeVector<INT<1>, INT<2>, INT<3>, INT<4>, INT<5>>>);
 static_assert(std::is_same_v<decltype(TypeTuple_sort<TypeVector<INT<5>, INT<3>, INT<4>, INT<1>, INT<2>>>(lmd)),
                              TypeVector<INT<1>, INT<2>, INT<3>, INT<4>, INT<5>>>);
-
-} // namespace test
+} // namespace test_TypeVector
 
 } // namespace rib::type
