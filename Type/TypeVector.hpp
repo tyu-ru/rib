@@ -14,26 +14,33 @@ struct TypeVector
 
     static constexpr auto size = sizeof...(Args);
 
-  private:
-    template <class Predicate, std::size_t... i>
-    static constexpr std::optional<std::size_t> find_if_impl([[maybe_unused]] Predicate pred, std::index_sequence<i...>)
-    {
-        if (!count_if(pred))
-        {
-            return std::nullopt;
-        }
-        return (0 + ... + (pred(TypeAdapter<Args>{}) ? i : 0));
-    }
-
-  public:
     template <class Predicate>
-    static constexpr std::optional<std::size_t> find_if(Predicate pred)
+    static constexpr std::size_t find_if([[maybe_unused]] Predicate pred)
     {
-        return find_if_impl(pred, std::make_index_sequence<size>{});
+        if constexpr (size == 0)
+        {
+            return 0;
+        }
+        else
+        {
+            std::size_t result{};
+            for (bool b : {pred(TypeAdapter<Args>{})...})
+            {
+                if (b)
+                    return result;
+                ++result;
+            }
+            return result;
+        }
+    }
+    template <template <class> class Pred>
+    static constexpr std::size_t find_if()
+    {
+        return find_if([](auto x) { return Pred<typename decltype(x)::type>::value; });
     }
 
     template <class T>
-    static constexpr std::optional<std::size_t> find()
+    static constexpr std::size_t find()
     {
         return find_if([](auto x) { return std::is_same_v<T, typename decltype(x)::type>; });
     }
@@ -67,9 +74,13 @@ static_assert(sizeof(TypeVector<int, char, double>) == 1);
 static_assert(TypeVector<>::size == 0);
 static_assert(TypeVector<int, char>::size == 2);
 
-static_assert(TypeVector<>::find<int>() == std::nullopt);
+static_assert(TypeVector<>::find_if<std::is_unsigned>() == 0);
+static_assert(TypeVector<int, unsigned int>::find_if<std::is_unsigned>() == 1);
+
+static_assert(TypeVector<>::find<int>() == 0);
 static_assert(TypeVector<int>::find<int>() == 0);
 static_assert(TypeVector<int, char>::find<char>() == 1);
+static_assert(TypeVector<int, char>::find<double>() == 2);
 
 static_assert(TypeVector<>::count<int>() == 0);
 static_assert(TypeVector<int>::count<int>() == 1);
