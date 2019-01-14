@@ -114,19 +114,19 @@ static_assert(std::is_same_v<TypeVector_gen_t<int, char>, TypeVector<int, char>>
 static_assert(std::is_same_v<TypeVector_gen_t<std::tuple<int, char>>, TypeVector<int, char>>);
 
 template <class...>
-struct TypeTuple_cat;
+struct TypeVector_cat;
 template <class... Args1, class... Args2>
-struct TypeTuple_cat<TypeVector<Args1...>, TypeVector<Args2...>>
+struct TypeVector_cat<TypeVector<Args1...>, TypeVector<Args2...>>
 {
     using type = TypeVector<Args1..., Args2...>;
 };
-template <class... Args1, class... Args2, class... TypeTuples>
-struct TypeTuple_cat<TypeVector<Args1...>, TypeVector<Args2...>, TypeTuples...>
+template <class... Args1, class... Args2, class... TypeVectors>
+struct TypeVector_cat<TypeVector<Args1...>, TypeVector<Args2...>, TypeVectors...>
 {
-    using type = typename TypeTuple_cat<TypeVector<Args1..., Args2...>, TypeTuples...>::type;
+    using type = typename TypeVector_cat<TypeVector<Args1..., Args2...>, TypeVectors...>::type;
 };
-template <class... TypeTuples>
-using TypeTuple_cat_t = typename TypeTuple_cat<TypeTuples...>::type;
+template <class... TypeVectors>
+using TypeTuple_cat_t = typename TypeVector_cat<TypeVectors...>::type;
 
 static_assert(std::is_same_v<TypeTuple_cat_t<TypeVector<>, TypeVector<char>>,
                              TypeVector<char>>);
@@ -135,17 +135,17 @@ static_assert(std::is_same_v<TypeTuple_cat_t<TypeVector<int>, TypeVector<int, ch
 static_assert(std::is_same_v<TypeTuple_cat_t<TypeVector<int>, TypeVector<char>, TypeVector<double>>,
                              TypeVector<int, char, double>>);
 
-template <class TypeTuple_, std::size_t i>
+template <class TypeVec, std::size_t i>
 struct TypeVector_get
 {
-    using type = std::tuple_element_t<i, typename TypeTuple_::std_tuple>;
+    using type = std::tuple_element_t<i, typename TypeVec::std_tuple>;
 };
-template <class TypeTuple_, std::size_t i>
-using TypeTuple_get_t = typename TypeVector_get<TypeTuple_, i>::type;
+template <class TypeVec, std::size_t i>
+using TypeTuple_get_t = typename TypeVector_get<TypeVec, i>::type;
 
 static_assert(std::is_same_v<TypeTuple_get_t<TypeVector<int, char>, 0>, int>);
 
-template <class TypeTuple_>
+template <class TypeVec>
 struct TypeTuple_reverse
 {
   private:
@@ -154,23 +154,23 @@ struct TypeTuple_reverse
     template <std::size_t... i>
     struct Inner<std::index_sequence<i...>>
     {
-        using type = TypeVector<TypeTuple_get_t<TypeTuple_, (TypeTuple_::size - i - 1)>...>;
+        using type = TypeVector<TypeTuple_get_t<TypeVec, (TypeVec::size - i - 1)>...>;
     };
 
   public:
-    using type = typename Inner<std::make_index_sequence<TypeTuple_::size>>::type;
+    using type = typename Inner<std::make_index_sequence<TypeVec::size>>::type;
 };
-template <class TypeTuple_>
-using TypeTuple_reverse_t = typename TypeTuple_reverse<TypeTuple_>::type;
+template <class TypeVec>
+using TypeTuple_reverse_t = typename TypeTuple_reverse<TypeVec>::type;
 
 static_assert(std::is_same_v<TypeTuple_reverse_t<TypeVector<>>, TypeVector<>>);
 static_assert(std::is_same_v<TypeTuple_reverse_t<TypeVector<int, char, double>>,
                              TypeVector<double, char, int>>);
 
-template <class TypeTuple_, std::size_t mid>
+template <class TypeVec, std::size_t mid>
 struct TypeTuple_rotate
 {
-    static_assert(mid <= TypeTuple_::size);
+    static_assert(mid <= TypeVec::size);
 
   private:
     template <class>
@@ -178,14 +178,14 @@ struct TypeTuple_rotate
     template <std::size_t... i>
     struct Inner<std::index_sequence<i...>>
     {
-        using type = TypeVector<TypeTuple_get_t<TypeTuple_, ((i + mid) % TypeTuple_::size)>...>;
+        using type = TypeVector<TypeTuple_get_t<TypeVec, ((i + mid) % TypeVec::size)>...>;
     };
 
   public:
-    using type = typename Inner<std::make_index_sequence<TypeTuple_::size>>::type;
+    using type = typename Inner<std::make_index_sequence<TypeVec::size>>::type;
 };
-template <class TypeTuple_, std::size_t mid>
-using TypeTuple_rotate_t = typename TypeTuple_rotate<TypeTuple_, mid>::type;
+template <class TypeVec, std::size_t mid>
+using TypeTuple_rotate_t = typename TypeTuple_rotate<TypeVec, mid>::type;
 
 static_assert(std::is_same_v<TypeTuple_rotate_t<TypeVector<>, 0>, TypeVector<>>);
 static_assert(std::is_same_v<TypeTuple_rotate_t<TypeVector<int, char, double>, 0>,
@@ -197,10 +197,10 @@ static_assert(std::is_same_v<TypeTuple_rotate_t<TypeVector<int, char, double>, 2
 static_assert(std::is_same_v<TypeTuple_rotate_t<TypeVector<int, char, double>, 3>,
                              TypeVector<int, char, double>>);
 
-template <class TypeTuple_, std::size_t length>
+template <class TypeVec, std::size_t length>
 struct TypeTuple_right
 {
-    static_assert(length <= TypeTuple_::size);
+    static_assert(length <= TypeVec::size);
 
   private:
     template <std::size_t x, class TT>
@@ -225,10 +225,10 @@ struct TypeTuple_right
     };
 
   public:
-    using type = typename TrimHead<TypeTuple_::size - length, TypeTuple_>::type;
+    using type = typename TrimHead<TypeVec::size - length, TypeVec>::type;
 };
-template <class TypeTuple_, std::size_t length>
-using TypeTuple_right_t = typename TypeTuple_right<TypeTuple_, length>::type;
+template <class TypeVec, std::size_t length>
+using TypeTuple_right_t = typename TypeTuple_right<TypeVec, length>::type;
 
 static_assert(std::is_same_v<TypeTuple_right_t<TypeVector<>, 0>, TypeVector<>>);
 static_assert(std::is_same_v<TypeTuple_right_t<TypeVector<int, char, double>, 0>,
@@ -240,15 +240,15 @@ static_assert(std::is_same_v<TypeTuple_right_t<TypeVector<int, char, double>, 2>
 static_assert(std::is_same_v<TypeTuple_right_t<TypeVector<int, char, double>, 3>,
                              TypeVector<int, char, double>>);
 
-template <class TypeTuple_, std::size_t length>
+template <class TypeVec, std::size_t length>
 struct TypeTuple_left
 {
-    static_assert(length <= TypeTuple_::size);
+    static_assert(length <= TypeVec::size);
     using type =
-        TypeTuple_right_t<TypeTuple_rotate_t<TypeTuple_, length>, length>;
+        TypeTuple_right_t<TypeTuple_rotate_t<TypeVec, length>, length>;
 };
-template <class TypeTuple_, std::size_t length>
-using TypeTuple_left_t = typename TypeTuple_left<TypeTuple_, length>::type;
+template <class TypeVec, std::size_t length>
+using TypeTuple_left_t = typename TypeTuple_left<TypeVec, length>::type;
 
 static_assert(std::is_same_v<TypeTuple_left_t<TypeVector<>, 0>, TypeVector<>>);
 static_assert(std::is_same_v<TypeTuple_left_t<TypeVector<int, char, double>, 0>,
@@ -260,15 +260,15 @@ static_assert(std::is_same_v<TypeTuple_left_t<TypeVector<int, char, double>, 2>,
 static_assert(std::is_same_v<TypeTuple_left_t<TypeVector<int, char, double>, 3>,
                              TypeVector<int, char, double>>);
 
-template <class TypeTuple_, std::size_t pos, std::size_t length = TypeTuple_::size - pos>
+template <class TypeVec, std::size_t pos, std::size_t length = TypeVec::size - pos>
 struct TypeTuple_mid
 {
-    static_assert(pos <= TypeTuple_::size);
-    static_assert(pos + length <= TypeTuple_::size);
-    using type = TypeTuple_left_t<TypeTuple_rotate_t<TypeTuple_, pos>, length>;
+    static_assert(pos <= TypeVec::size);
+    static_assert(pos + length <= TypeVec::size);
+    using type = TypeTuple_left_t<TypeTuple_rotate_t<TypeVec, pos>, length>;
 };
-template <class TypeTuple_, std::size_t pos, std::size_t length = TypeTuple_::size - pos>
-using TypeTuple_mid_t = typename TypeTuple_mid<TypeTuple_, pos, length>::type;
+template <class TypeVec, std::size_t pos, std::size_t length = TypeVec::size - pos>
+using TypeTuple_mid_t = typename TypeTuple_mid<TypeVec, pos, length>::type;
 
 static_assert(std::is_same_v<TypeTuple_mid_t<TypeVector<int, char, double>, 0, 0>,
                              TypeVector<>>);
@@ -296,12 +296,12 @@ static_assert(std::is_same_v<TypeTuple_mid_t<TypeVector<int, char, double>, 2>,
 static_assert(std::is_same_v<TypeTuple_mid_t<TypeVector<int, char, double>, 3>,
                              TypeVector<>>);
 
-template <class TypeTuple_, std::size_t i, std::size_t j>
+template <class TypeVec, std::size_t i, std::size_t j>
 struct TypeTuple_swap
 {
   private:
     template <std::size_t x>
-    using elm = TypeTuple_get_t<TypeTuple_, x>;
+    using elm = TypeTuple_get_t<TypeVec, x>;
 
     template <class>
     struct Inner;
@@ -315,10 +315,10 @@ struct TypeTuple_swap
     };
 
   public:
-    using type = typename Inner<std::make_index_sequence<TypeTuple_::size>>::type;
+    using type = typename Inner<std::make_index_sequence<TypeVec::size>>::type;
 };
-template <class TypeTuple_, std::size_t i, std::size_t j>
-using TypeTuple_swap_t = typename TypeTuple_swap<TypeTuple_, i, j>::type;
+template <class TypeVec, std::size_t i, std::size_t j>
+using TypeTuple_swap_t = typename TypeTuple_swap<TypeVec, i, j>::type;
 
 static_assert(std::is_same_v<TypeTuple_swap_t<TypeVector<int, char>, 0, 1>,
                              TypeVector<char, int>>);
@@ -381,24 +381,24 @@ static_assert(std::is_same_v<decltype(TypeTuple_merge<TypeVector<INT<1>, INT<3>,
                              TypeVector<INT<1>, INT<2>, INT<3>, INT<4>, INT<5>>>);
 } // namespace test_TypeVector
 
-template <class TypeTuple_, class Compare>
+template <class TypeVec, class Compare>
 constexpr auto TypeTuple_sort([[maybe_unused]] Compare compare)
 {
-    constexpr auto s = TypeTuple_::size;
+    constexpr auto s = TypeVec::size;
     if constexpr (s < 2)
     {
-        return TypeTuple_{};
+        return TypeVec{};
     }
     else
     {
-        using L = decltype(TypeTuple_sort<TypeTuple_left_t<TypeTuple_, s / 2>>(compare));
-        using R = decltype(TypeTuple_sort<TypeTuple_mid_t<TypeTuple_, s / 2>>(compare));
+        using L = decltype(TypeTuple_sort<TypeTuple_left_t<TypeVec, s / 2>>(compare));
+        using R = decltype(TypeTuple_sort<TypeTuple_mid_t<TypeVec, s / 2>>(compare));
         return TypeTuple_merge<L, R>(compare);
     }
 }
 
-template <class TypeTuple_, auto compare>
-using TypeTuple_sort_t = decltype(TypeTuple_sort<TypeTuple_>(compare));
+template <class TypeVec, auto compare>
+using TypeTuple_sort_t = decltype(TypeTuple_sort<TypeVec>(compare));
 
 namespace test_TypeVector
 {
