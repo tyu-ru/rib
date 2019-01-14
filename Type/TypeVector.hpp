@@ -113,16 +113,6 @@ using TypeVector_gen_t = typename TypeVector_gen<Args...>::type;
 static_assert(std::is_same_v<TypeVector_gen_t<int, char>, TypeVector<int, char>>);
 static_assert(std::is_same_v<TypeVector_gen_t<std::tuple<int, char>>, TypeVector<int, char>>);
 
-template <class TypeTuple_, std::size_t i>
-struct TypeTuple_element
-{
-    using type = std::tuple_element_t<i, typename TypeTuple_::std_tuple>;
-};
-template <class TypeTuple_, std::size_t i>
-using TypeTuple_element_t = typename TypeTuple_element<TypeTuple_, i>::type;
-
-static_assert(std::is_same_v<TypeTuple_element_t<TypeVector<int, char>, 0>, int>);
-
 template <class...>
 struct TypeTuple_cat;
 template <class... Args1, class... Args2>
@@ -145,6 +135,16 @@ static_assert(std::is_same_v<TypeTuple_cat_t<TypeVector<int>, TypeVector<int, ch
 static_assert(std::is_same_v<TypeTuple_cat_t<TypeVector<int>, TypeVector<char>, TypeVector<double>>,
                              TypeVector<int, char, double>>);
 
+template <class TypeTuple_, std::size_t i>
+struct TypeVector_get
+{
+    using type = std::tuple_element_t<i, typename TypeTuple_::std_tuple>;
+};
+template <class TypeTuple_, std::size_t i>
+using TypeTuple_get_t = typename TypeVector_get<TypeTuple_, i>::type;
+
+static_assert(std::is_same_v<TypeTuple_get_t<TypeVector<int, char>, 0>, int>);
+
 template <class TypeTuple_>
 struct TypeTuple_reverse
 {
@@ -154,7 +154,7 @@ struct TypeTuple_reverse
     template <std::size_t... i>
     struct Inner<std::index_sequence<i...>>
     {
-        using type = TypeVector<TypeTuple_element_t<TypeTuple_, (TypeTuple_::size - i - 1)>...>;
+        using type = TypeVector<TypeTuple_get_t<TypeTuple_, (TypeTuple_::size - i - 1)>...>;
     };
 
   public:
@@ -178,7 +178,7 @@ struct TypeTuple_rotate
     template <std::size_t... i>
     struct Inner<std::index_sequence<i...>>
     {
-        using type = TypeVector<TypeTuple_element_t<TypeTuple_, ((i + mid) % TypeTuple_::size)>...>;
+        using type = TypeVector<TypeTuple_get_t<TypeTuple_, ((i + mid) % TypeTuple_::size)>...>;
     };
 
   public:
@@ -301,7 +301,7 @@ struct TypeTuple_swap
 {
   private:
     template <std::size_t x>
-    using elm = TypeTuple_element_t<TypeTuple_, x>;
+    using elm = TypeTuple_get_t<TypeTuple_, x>;
 
     template <class>
     struct Inner;
@@ -338,8 +338,8 @@ constexpr auto TypeTuple_merge(Compare compare)
     }
     else
     {
-        using H1 = TypeTuple_element_t<TT1, 0>;
-        using H2 = TypeTuple_element_t<TT2, 0>;
+        using H1 = TypeTuple_get_t<TT1, 0>;
+        using H2 = TypeTuple_get_t<TT2, 0>;
         if constexpr (compare(TypeAdapter<H1>{}, TypeAdapter<H2>{}))
         {
             return TypeTuple_cat_t<TypeVector<H1>, decltype(TypeTuple_merge<TypeTuple_mid_t<TT1, 1>, TT2>(compare))>{};
