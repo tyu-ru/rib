@@ -98,20 +98,20 @@ static_assert(TypeVector<int, char>::unique());
 static_assert(!TypeVector<int, int>::unique());
 
 template <class... Args>
-struct TypeTupleGenerator
+struct TypeVector_gen
 {
     using type = TypeVector<Args...>;
 };
 template <class... Args>
-struct TypeTupleGenerator<std::tuple<Args...>>
+struct TypeVector_gen<std::tuple<Args...>>
 {
     using type = TypeVector<Args...>;
 };
 template <class... Args>
-using TypeTupleGenerator_t = typename TypeTupleGenerator<Args...>::type;
+using TypeVector_gen_t = typename TypeVector_gen<Args...>::type;
 
-static_assert(std::is_same_v<TypeVector<int, char>, TypeTupleGenerator_t<int, char>>);
-static_assert(std::is_same_v<TypeVector<int, char>, TypeTupleGenerator_t<std::tuple<int, char>>>);
+static_assert(std::is_same_v<TypeVector_gen_t<int, char>, TypeVector<int, char>>);
+static_assert(std::is_same_v<TypeVector_gen_t<std::tuple<int, char>>, TypeVector<int, char>>);
 
 template <class TypeTuple_, std::size_t i>
 struct TypeTuple_element
