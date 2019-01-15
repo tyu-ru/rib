@@ -296,6 +296,30 @@ static_assert(std::is_same_v<TypeTuple_mid_t<TypeVector<int, char, double>, 2>,
 static_assert(std::is_same_v<TypeTuple_mid_t<TypeVector<int, char, double>, 3>,
                              TypeVector<>>);
 
+template <class TypeVec, std::size_t i, class T>
+struct TypeVector_replace
+{
+  private:
+    template <std::size_t x>
+    using elm = TypeTuple_get_t<TypeVec, x>;
+
+    template <class>
+    struct Inner;
+    template <std::size_t... index>
+    struct Inner<std::index_sequence<index...>>
+    {
+        using type = TypeVector<std::conditional_t<index != i, elm<index>, T>...>;
+    };
+
+  public:
+    using type = typename Inner<std::make_index_sequence<TypeVec::size>>::type;
+};
+template <class TypeVec, std::size_t i, class T>
+using TypeVector_replace_t = typename TypeVector_replace<TypeVec, i, T>::type;
+
+static_assert(std::is_same_v<TypeVector_replace_t<TypeVector<int, char, double>, 2, float>,
+                             TypeVector<int, char, float>>);
+
 template <class TypeVec, std::size_t i, std::size_t j>
 struct TypeTuple_swap
 {
