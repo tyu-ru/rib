@@ -327,19 +327,8 @@ struct TypeTuple_swap
     template <std::size_t x>
     using elm = TypeTuple_get_t<TypeVec, x>;
 
-    template <class>
-    struct Inner;
-    template <std::size_t... index>
-    struct Inner<std::index_sequence<index...>>
-    {
-        using type = TypeVector<
-            std::conditional_t<index == i, elm<j>,
-                               std::conditional_t<index == j, elm<i>,
-                                                  elm<index>>>...>;
-    };
-
   public:
-    using type = typename Inner<std::make_index_sequence<TypeVec::size>>::type;
+    using type = TypeVector_replace_t<TypeVector_replace_t<TypeVec, j, elm<i>>, i, elm<j>>;
 };
 template <class TypeVec, std::size_t i, std::size_t j>
 using TypeTuple_swap_t = typename TypeTuple_swap<TypeVec, i, j>::type;
