@@ -10,6 +10,7 @@ AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: All
 AllowShortIfStatementsOnASingleLine: true
 AllowShortLoopsOnASingleLine: true
+PointerAlignment: Left
 
 ColumnLimit: 0
 # brace
@@ -24,5 +25,5 @@ BraceWrapping:
     AfterUnion: true
     BeforeCatch: true
     BeforeElse: false
-    
+
 SortIncludes: false

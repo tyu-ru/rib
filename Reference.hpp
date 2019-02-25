@@ -5,34 +5,56 @@
 namespace rib
 {
 
+/**
+ * @brief explicit call by reference helper
+ * @tparam T 
+ * @par example
+ * @code 
+ * void f(Ref<int> r) {
+ *     r = 42;
+ * }
+ * int a;
+ * // f(a); // compile error!
+ * f(Ref(a)); // explicit call by reference
+ * @endcode
+ */
 template <class T>
 struct Ref
 {
-    constexpr explicit Ref(T &x) : ref(x) {}
+    static_assert(!std::is_reference_v<T>);
 
-    const T &operator=(const T &) const = delete;
-    constexpr T &operator=(const T &x) { return ref = x; }
-    constexpr Ref &operator=(const Ref &x) { return ref = x; }
+    /// explicit constructor
+    constexpr explicit Ref(T& x) : ref(x) {}
 
-    constexpr operator const T &() const { return ref; }
-    constexpr operator T &() { return ref; }
+    // const T &operator=(const T &) const = delete;
+    /// assign
+    constexpr T& operator=(const T& x) { return ref = x; }
+    /// assign
+    constexpr Ref& operator=(const Ref& x) { return ref = x; }
 
-    constexpr const T &get() const { return ref; }
-    constexpr T &get() { return ref; }
+    /// type conversion
+    constexpr operator const T&() const { return ref; }
+    /// type conversion
+    constexpr operator T&() { return ref; }
+
+    /// explicit accessor
+    constexpr const T& var() const { return ref; }
+    /// explicit accessor
+    constexpr T& var() { return ref; }
 
 private:
-    T &ref;
+    T& ref;
 };
 
 static_assert(std::is_invocable_v<void(Ref<int>), Ref<int>>);
-static_assert(std::is_invocable_v<void(Ref<int>), Ref<int> &>);
-static_assert(std::is_invocable_v<void(Ref<int>), Ref<int> &&>);
+static_assert(std::is_invocable_v<void(Ref<int>), Ref<int>&>);
+static_assert(std::is_invocable_v<void(Ref<int>), Ref<int>&&>);
 static_assert(!std::is_invocable_v<void(Ref<int>), int>);
-static_assert(!std::is_invocable_v<void(Ref<int>), int &>);
-static_assert(!std::is_invocable_v<void(Ref<int>), int &&>);
+static_assert(!std::is_invocable_v<void(Ref<int>), int&>);
+static_assert(!std::is_invocable_v<void(Ref<int>), int&&>);
 
 static_assert(std::is_assignable_v<Ref<int>, int>);
-static_assert(std::is_assignable_v<int &, Ref<int>>);
+static_assert(std::is_assignable_v<int&, Ref<int>>);
 static_assert(std::is_assignable_v<Ref<int>, Ref<int>>);
 
 } // namespace rib
