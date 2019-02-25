@@ -4,7 +4,7 @@
 #include <optional>
 #include "TypeUtil.hpp"
 
-namespace rib::type
+namespace rib::type::vector
 {
 
 template <class... Args>
@@ -21,7 +21,7 @@ struct TypeVector
             return 0;
         } else {
             std::size_t result{};
-            for (bool b : {pred(TypeAdapter<Args>{})...}) {
+            for (bool b : {pred(handle::TypeAdapter<Args>{})...}) {
                 if (b) return result;
                 ++result;
             }
@@ -43,7 +43,7 @@ struct TypeVector
     template <class Predicate>
     static constexpr std::size_t count_if([[maybe_unused]] Predicate pred)
     {
-        return (0 + ... + (pred(TypeAdapter<Args>{}) ? 1 : 0));
+        return (0 + ... + (pred(handle::TypeAdapter<Args>{}) ? 1 : 0));
     }
 
     template <class T>
@@ -338,7 +338,7 @@ constexpr auto TypeVector_merge(Compare compare)
     } else {
         using H1 = TypeVector_get_t<TT1, 0>;
         using H2 = TypeVector_get_t<TT2, 0>;
-        if constexpr (compare(TypeAdapter<H1>{}, TypeAdapter<H2>{})) {
+        if constexpr (compare(handle::TypeAdapter<H1>{}, handle::TypeAdapter<H2>{})) {
             return TypeVector_cat_t<TypeVector<H1>, decltype(TypeVector_merge<TypeVector_mid_t<TT1, 1>, TT2>(compare))>{};
         } else {
             return TypeVector_cat_t<TypeVector<H2>, decltype(TypeVector_merge<TT1, TypeVector_mid_t<TT2, 1>>(compare))>{};
@@ -405,4 +405,4 @@ static_assert(std::is_same_v<decltype(TypeVector_sort<TypeVector<INT<5>, INT<3>,
                              TypeVector<INT<1>, INT<2>, INT<3>, INT<4>, INT<5>>>);
 } // namespace test_TypeVector
 
-} // namespace rib::type
+} // namespace rib::type::vector

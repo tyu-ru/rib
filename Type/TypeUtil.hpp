@@ -1,67 +1,67 @@
 #pragma once
 #include <utility>
 
-namespace rib::type
+/// handling type information
+namespace rib::type::handle
 {
 
+/**
+ * @brief type adapter
+ * @details type information at copyable
+ * @tparam T type
+ */
 template <class T>
 struct TypeAdapter
 {
+    /// type
     using type = T;
 };
 
-template <template <class...> class T>
+/**
+ * @brief template adapter(by type)
+ * @details handling template(by type)
+ * @tparam Template class template
+ */
+template <template <class...> class Template>
 struct TemplateAdaperByType
 {
+    /**
+     * @brief template specialization
+     * @details equal Template<Args...>
+     * @tparam Args 
+     */
     template <class... Args>
-    using Instance = T<Args...>;
+    using Specialize = Template<Args...>;
+    /**
+     * @brief TypeAdapter
+     * @details equal TypeAdapter<Template<Args...>>
+     * @tparam Args 
+     */
     template <class... Args>
-    using TypeAdapter = TypeAdapter<T<Args...>>;
+    using TypeAdapter = TypeAdapter<Template<Args...>>;
 };
-template <template <auto...> class T>
+/**
+ * @brief template adapter(by value)
+ * @details handling template(by value)
+ * @tparam Template class template
+ */
+template <template <auto...> class Template>
 struct TemplateAdaperByValue
 {
-    template <auto... Args>
-    using Instance = T<Args...>;
-    template <auto... Args>
-    using TypeAdapter = TypeAdapter<T<Args...>>;
+    /**
+     * @brief template specialization
+     * @details equal Template<args...>
+     * @tparam args 
+     */
+    template <auto... args>
+    using Specialize = Template<args...>;
+    /**
+     * @brief TypeAdapter
+     * @details equal TypeAdapter<Template<args...>>
+     * @tparam args 
+     */
+    template <auto... args>
+    using TypeAdapter = TypeAdapter<Template<args...>>;
 };
 
-template <template <class...> class Template, class Instance>
-struct is_template_instance_by_type : std::false_type
-{
-};
-template <template <class...> class Template, class... Args>
-struct is_template_instance_by_type<Template, Template<Args...>> : std::true_type
-{
-};
-template <template <class...> class Template, class Instance>
-constexpr bool is_template_instance_by_type_v = is_template_instance_by_type<Template, Instance>::value;
-
-static_assert(!is_template_instance_by_type_v<TypeAdapter, int>);
-static_assert(is_template_instance_by_type_v<TypeAdapter, TypeAdapter<int>>);
-
-template <template <auto...> class Template, class Instance>
-struct is_template_instance_by_value : std::false_type
-{
-};
-template <template <auto...> class Template, auto... Args>
-struct is_template_instance_by_value<Template, Template<Args...>> : std::true_type
-{
-};
-template <template <auto...> class Template, class Instance>
-constexpr bool is_template_instance_by_value_v = is_template_instance_by_value<Template, Instance>::value;
-
-namespace test
-{
-
-template <int x>
-struct TEST_INT
-{
-};
-
-static_assert(!is_template_instance_by_value_v<TEST_INT, int>);
-static_assert(is_template_instance_by_value_v<TEST_INT, TEST_INT<0>>);
-
-} // namespace test
-} // namespace rib::type
+} // namespace rib::type::handle
