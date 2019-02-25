@@ -17,17 +17,12 @@ struct TypeVector
     template <class Predicate>
     static constexpr std::size_t find_if([[maybe_unused]] Predicate pred)
     {
-        if constexpr (size == 0)
-        {
+        if constexpr (size == 0) {
             return 0;
-        }
-        else
-        {
+        } else {
             std::size_t result{};
-            for (bool b : {pred(TypeAdapter<Args>{})...})
-            {
-                if (b)
-                    return result;
+            for (bool b : {pred(TypeAdapter<Args>{})...}) {
+                if (b) return result;
                 ++result;
             }
             return result;
@@ -58,15 +53,9 @@ struct TypeVector
     }
 
     template <class T>
-    static constexpr bool contain()
-    {
-        return count<T>() != 0;
-    }
+    static constexpr bool contain() { return count<T>() != 0; }
 
-    static constexpr bool unique()
-    {
-        return (... && (count<Args>() == 1));
-    }
+    static constexpr bool unique() { return (... && (count<Args>() == 1)); }
 };
 
 static_assert(sizeof(TypeVector<int, char, double>) == 1);
@@ -148,7 +137,7 @@ static_assert(std::is_same_v<TypeVector_get_t<TypeVector<int, char>, 0>, int>);
 template <class TypeVec>
 struct TypeVector_reverse
 {
-  private:
+private:
     template <class>
     struct Inner;
     template <std::size_t... i>
@@ -157,7 +146,7 @@ struct TypeVector_reverse
         using type = TypeVector<TypeVector_get_t<TypeVec, (TypeVec::size - i - 1)>...>;
     };
 
-  public:
+public:
     using type = typename Inner<std::make_index_sequence<TypeVec::size>>::type;
 };
 template <class TypeVec>
@@ -172,7 +161,7 @@ struct TypeVector_rotate
 {
     static_assert(mid <= TypeVec::size);
 
-  private:
+private:
     template <class>
     struct Inner;
     template <std::size_t... i>
@@ -181,7 +170,7 @@ struct TypeVector_rotate
         using type = TypeVector<TypeVector_get_t<TypeVec, ((i + mid) % TypeVec::size)>...>;
     };
 
-  public:
+public:
     using type = typename Inner<std::make_index_sequence<TypeVec::size>>::type;
 };
 template <class TypeVec, std::size_t mid>
@@ -202,11 +191,11 @@ struct TypeVector_right
 {
     static_assert(length <= TypeVec::size);
 
-  private:
+private:
     template <std::size_t x, class TT>
     struct TrimHead
     {
-      private:
+    private:
         template <class>
         struct Inner;
         template <class T, class... Args>
@@ -215,7 +204,7 @@ struct TypeVector_right
             using type = typename TrimHead<x - 1, TypeVector<Args...>>::type;
         };
 
-      public:
+    public:
         using type = typename Inner<TT>::type;
     };
     template <class TT>
@@ -224,7 +213,7 @@ struct TypeVector_right
         using type = TT;
     };
 
-  public:
+public:
     using type = typename TrimHead<TypeVec::size - length, TypeVec>::type;
 };
 template <class TypeVec, std::size_t length>
@@ -300,7 +289,7 @@ static_assert(std::is_same_v<TypeVector_mid_t<TypeVector<int, char, double>, 3>,
 template <class TypeVec, std::size_t i, class T>
 struct TypeVector_replace
 {
-  private:
+private:
     template <std::size_t x>
     using elm = TypeVector_get_t<TypeVec, x>;
 
@@ -312,7 +301,7 @@ struct TypeVector_replace
         using type = TypeVector<std::conditional_t<index != i, elm<index>, T>...>;
     };
 
-  public:
+public:
     using type = typename Inner<std::make_index_sequence<TypeVec::size>>::type;
 };
 template <class TypeVec, std::size_t i, class T>
@@ -324,11 +313,11 @@ static_assert(std::is_same_v<TypeVector_replace_t<TypeVector<int, char, double>,
 template <class TypeVec, std::size_t i, std::size_t j>
 struct TypeVector_swap
 {
-  private:
+private:
     template <std::size_t x>
     using elm = TypeVector_get_t<TypeVec, x>;
 
-  public:
+public:
     using type = TypeVector_replace_t<TypeVector_replace_t<TypeVec, j, elm<i>>, i, elm<j>>;
 };
 template <class TypeVec, std::size_t i, std::size_t j>
@@ -342,24 +331,16 @@ static_assert(std::is_same_v<TypeVector_swap_t<TypeVector<int, char, double>, 0,
 template <class TT1, class TT2, class Compare>
 constexpr auto TypeVector_merge(Compare compare)
 {
-    if constexpr (TT1::size == 0)
-    {
+    if constexpr (TT1::size == 0) {
         return TT2{};
-    }
-    else if constexpr (TT2::size == 0)
-    {
+    } else if constexpr (TT2::size == 0) {
         return TT1{};
-    }
-    else
-    {
+    } else {
         using H1 = TypeVector_get_t<TT1, 0>;
         using H2 = TypeVector_get_t<TT2, 0>;
-        if constexpr (compare(TypeAdapter<H1>{}, TypeAdapter<H2>{}))
-        {
+        if constexpr (compare(TypeAdapter<H1>{}, TypeAdapter<H2>{})) {
             return TypeVector_cat_t<TypeVector<H1>, decltype(TypeVector_merge<TypeVector_mid_t<TT1, 1>, TT2>(compare))>{};
-        }
-        else
-        {
+        } else {
             return TypeVector_cat_t<TypeVector<H2>, decltype(TypeVector_merge<TT1, TypeVector_mid_t<TT2, 1>>(compare))>{};
         }
     }
@@ -369,7 +350,6 @@ using TypeVector_merge_t = decltype(TypeVector_merge<TypeVector1, TypeVector2>(c
 
 namespace test_TypeVector
 {
-
 template <int x>
 using INT = std::integral_constant<int, x>;
 
@@ -399,12 +379,9 @@ template <class TypeVec, class Compare>
 constexpr auto TypeVector_sort([[maybe_unused]] Compare compare)
 {
     constexpr auto s = TypeVec::size;
-    if constexpr (s < 2)
-    {
+    if constexpr (s < 2) {
         return TypeVec{};
-    }
-    else
-    {
+    } else {
         using L = decltype(TypeVector_sort<TypeVector_left_t<TypeVec, s / 2>>(compare));
         using R = decltype(TypeVector_sort<TypeVector_mid_t<TypeVec, s / 2>>(compare));
         return TypeVector_merge<L, R>(compare);
