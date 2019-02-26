@@ -16,6 +16,22 @@ struct TypeVector
     template <std::size_t i>
     using Element = std::tuple_element_t<i, std_tuple>;
 
+    template <template <std::size_t> class UnaryOperation>
+    struct Transform
+    {
+    private:
+        template <class>
+        struct Inner;
+        template <std::size_t... i>
+        struct Inner<std::index_sequence<i...>>
+        {
+            using type = TypeVector<typename UnaryOperation<i>::type...>;
+        };
+
+    public:
+        using type = typename Inner<std::make_index_sequence<size>>::type;
+    };
+
     template <class Predicate>
     static constexpr std::size_t find_if([[maybe_unused]] Predicate pred)
     {
