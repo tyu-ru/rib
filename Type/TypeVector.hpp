@@ -319,28 +319,34 @@ static_assert(std::is_same_v<TypeVector_cat_t<TypeVector<int>, TypeVector<int, c
 static_assert(std::is_same_v<TypeVector_cat_t<TypeVector<int>, TypeVector<char>, TypeVector<double>>,
                              TypeVector<int, char, double>>);
 
-/*
-template <class TT1, class TT2, class Compare>
-constexpr auto TypeVector_merge(Compare compare)
+template <class V1, class V2, const auto& compare>
+struct TypeVector_merge
 {
-    if constexpr (TT1::size == 0) {
-        return TT2{};
-    } else if constexpr (TT2::size == 0) {
-        return TT1{};
-    } else {
-        using H1 = TypeVector_get_t<TT1, 0>;
-        using H2 = TypeVector_get_t<TT2, 0>;
-        if constexpr (compare(handle::TypeAdapter<H1>{}, handle::TypeAdapter<H2>{})) {
-            return TypeVector_cat_t<TypeVector<H1>, decltype(TypeVector_merge<TypeVector_mid_t<TT1, 1>, TT2>(compare))>{};
+private:
+    static constexpr auto impl()
+    {
+        if constexpr (V1::size == 0) {
+            return V2{};
+        } else if constexpr (V2::size == 0) {
+            return V1{};
         } else {
-            return TypeVector_cat_t<TypeVector<H2>, decltype(TypeVector_merge<TT1, TypeVector_mid_t<TT2, 1>>(compare))>{};
+            using H1 = typename V1::template Element<0>;
+            using H2 = typename V2::template Element<0>;
+            if constexpr (compare(handle::TypeAdapter<H1>{}, handle::TypeAdapter<H2>{})) {
+                return TypeVector_cat_t<TypeVector<H1>, typename TypeVector_merge<typename V1::ChopHead, V2, compare>::type>{};
+            } else {
+                return TypeVector_cat_t<TypeVector<H2>, typename TypeVector_merge<typename V2::ChopHead, V1, compare>::type>{};
+            }
         }
     }
-}
-template <class TypeVector1, class TypeVector2, auto compare>
-using TypeVector_merge_t = decltype(TypeVector_merge<TypeVector1, TypeVector2>(compare));
 
-namespace test_TypeVector
+public:
+    using type = std::invoke_result_t<decltype(impl)>;
+};
+template <class TypeVector1, class TypeVector2, const auto& compare>
+using TypeVector_merge_t = typename TypeVector_merge<TypeVector1, TypeVector2, compare>::type;
+
+namespace impl_tests
 {
 template <int x>
 using INT = std::integral_constant<int, x>;
@@ -351,22 +357,25 @@ constexpr auto lmd = [](auto x, auto y) -> bool {
     return (decltype(x)::type::value) < (decltype(y)::type::value);
 };
 
-static_assert(std::is_same_v<decltype(TypeVector_merge<TypeVector<>, TypeVector<>>(yes_man)),
+static_assert(std::is_same_v<TypeVector_merge_t<TypeVector<>, TypeVector<>, yes_man>,
                              TypeVector<>>);
-static_assert(std::is_same_v<decltype(TypeVector_merge<TypeVector<int>, TypeVector<>>(yes_man)),
+static_assert(std::is_same_v<TypeVector_merge_t<TypeVector<int>, TypeVector<>, yes_man>,
                              TypeVector<int>>);
-static_assert(std::is_same_v<decltype(TypeVector_merge<TypeVector<>, TypeVector<int>>(yes_man)),
+static_assert(std::is_same_v<TypeVector_merge_t<TypeVector<>, TypeVector<int>, yes_man>,
                              TypeVector<int>>);
-static_assert(std::is_same_v<decltype(TypeVector_merge<TypeVector<int>, TypeVector<int>>(yes_man)),
-                             TypeVector<int, int>>);
-static_assert(std::is_same_v<decltype(TypeVector_merge<TypeVector<int>, TypeVector<char>>(no_man)),
+static_assert(std::is_same_v<TypeVector_merge_t<TypeVector<int>, TypeVector<char>, yes_man>,
+                             TypeVector<int, char>>);
+static_assert(std::is_same_v<TypeVector_merge_t<TypeVector<int>, TypeVector<char>, no_man>,
                              TypeVector<char, int>>);
-static_assert(std::is_same_v<decltype(TypeVector_merge<TypeVector<INT<0>>, TypeVector<INT<1>>>(lmd)),
-                             TypeVector<INT<0>, INT<1>>>);
-static_assert(std::is_same_v<decltype(TypeVector_merge<TypeVector<INT<1>, INT<3>, INT<4>>, TypeVector<INT<2>, INT<5>>>(lmd)),
-                             TypeVector<INT<1>, INT<2>, INT<3>, INT<4>, INT<5>>>);
-} // namespace test_TypeVector
 
+static_assert(std::is_same_v<TypeVector_merge_t<TypeVector<INT<1>>, TypeVector<INT<2>>, lmd>,
+                             TypeVector<INT<1>, INT<2>>>);
+static_assert(std::is_same_v<TypeVector_merge_t<TypeVector<INT<1>, INT<3>, INT<4>>, TypeVector<INT<2>, INT<5>>, lmd>,
+                             TypeVector<INT<1>, INT<2>, INT<3>, INT<4>, INT<5>>>);
+
+} // namespace impl_tests
+
+/*
 template <class TypeVec, class Compare>
 constexpr auto TypeVector_sort([[maybe_unused]] Compare compare)
 {
@@ -383,7 +392,7 @@ constexpr auto TypeVector_sort([[maybe_unused]] Compare compare)
 template <class TypeVec, auto compare>
 using TypeVector_sort_t = decltype(TypeVector_sort<TypeVec>(compare));
 
-namespace test_TypeVector
+namespace impl_tests
 {
 static_assert(std::is_same_v<decltype(TypeVector_sort<TypeVector<>>(lmd)),
                              TypeVector<>>);
