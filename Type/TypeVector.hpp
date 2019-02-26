@@ -13,6 +13,8 @@ struct TypeVector
     using std_tuple = std::tuple<Args...>;
 
     static constexpr auto size = sizeof...(Args);
+    template <std::size_t i>
+    using Element = std::tuple_element_t<i, std_tuple>;
 
     template <class Predicate>
     static constexpr std::size_t find_if([[maybe_unused]] Predicate pred)
@@ -62,6 +64,9 @@ static_assert(sizeof(TypeVector<int, char, double>) == 1);
 
 static_assert(TypeVector<>::size == 0);
 static_assert(TypeVector<int, char>::size == 2);
+
+static_assert(std::is_same_v<TypeVector<int, char>::Element<0>, int>);
+static_assert(std::is_same_v<TypeVector<int, char>::Element<1>, char>);
 
 static_assert(TypeVector<>::find_if<std::is_unsigned>() == 0);
 static_assert(TypeVector<int, unsigned int>::find_if<std::is_unsigned>() == 1);
@@ -124,16 +129,7 @@ static_assert(std::is_same_v<TypeVector_cat_t<TypeVector<int>, TypeVector<int, c
 static_assert(std::is_same_v<TypeVector_cat_t<TypeVector<int>, TypeVector<char>, TypeVector<double>>,
                              TypeVector<int, char, double>>);
 
-template <class TypeVec, std::size_t i>
-struct TypeVector_get
-{
-    using type = std::tuple_element_t<i, typename TypeVec::std_tuple>;
-};
-template <class TypeVec, std::size_t i>
-using TypeVector_get_t = typename TypeVector_get<TypeVec, i>::type;
-
-static_assert(std::is_same_v<TypeVector_get_t<TypeVector<int, char>, 0>, int>);
-
+/*
 template <class TypeVec>
 struct TypeVector_reverse
 {
@@ -151,10 +147,10 @@ public:
 };
 template <class TypeVec>
 using TypeVector_reverse_t = typename TypeVector_reverse<TypeVec>::type;
-
 static_assert(std::is_same_v<TypeVector_reverse_t<TypeVector<>>, TypeVector<>>);
 static_assert(std::is_same_v<TypeVector_reverse_t<TypeVector<int, char, double>>,
                              TypeVector<double, char, int>>);
+
 
 template <class TypeVec, std::size_t mid>
 struct TypeVector_rotate
@@ -405,4 +401,5 @@ static_assert(std::is_same_v<decltype(TypeVector_sort<TypeVector<INT<5>, INT<3>,
                              TypeVector<INT<1>, INT<2>, INT<3>, INT<4>, INT<5>>>);
 } // namespace test_TypeVector
 
+*/
 } // namespace rib::type::vector
