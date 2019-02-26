@@ -67,6 +67,23 @@ private:
         using type = typename Inner<Args...>::type;
     };
 
+    template <std::size_t len>
+    struct ChopHeads_impl
+    {
+        static_assert(len <= size);
+        template <std::size_t len2, class>
+        struct Inner
+        {
+            using type = typename ChopHead_impl::type::template ChopHeads<len - 1>;
+        };
+        template <class Dummy>
+        struct Inner<0, Dummy>
+        {
+            using type = TypeVector<Args...>;
+        };
+        using type = typename Inner<len, void>::type;
+    };
+
 public:
     template <template <std::size_t> class UnaryOperation>
     using Transform = typename Transform_impl<UnaryOperation>::type;
@@ -77,6 +94,9 @@ public:
     using Rotate = typename Rotate_impl<mid>::type;
 
     using ChopHead = typename ChopHead_impl::type;
+
+    template <std::size_t len>
+    using ChopHeads = typename ChopHeads_impl<len>::type;
 
     template <class Predicate>
     static constexpr std::size_t find_if([[maybe_unused]] Predicate pred)
@@ -134,10 +154,6 @@ static_assert(std::is_same_v<TypeVector<>::Reverse, TypeVector<>>);
 static_assert(std::is_same_v<TypeVector<int, char, double>::Reverse,
                              TypeVector<double, char, int>>);
 
-static_assert(std::is_same_v<TypeVector<>::ChopHead, TypeVector<>>);
-static_assert(std::is_same_v<TypeVector<int>::ChopHead, TypeVector<>>);
-static_assert(std::is_same_v<TypeVector<int, char>::ChopHead, TypeVector<char>>);
-
 static_assert(std::is_same_v<TypeVector<>::Rotate<0>, TypeVector<>>);
 static_assert(std::is_same_v<TypeVector<int, char, double>::Rotate<0>,
                              TypeVector<int, char, double>>);
@@ -147,6 +163,20 @@ static_assert(std::is_same_v<TypeVector<int, char, double>::Rotate<2>,
                              TypeVector<double, int, char>>);
 static_assert(std::is_same_v<TypeVector<int, char, double>::Rotate<3>,
                              TypeVector<int, char, double>>);
+
+static_assert(std::is_same_v<TypeVector<>::ChopHead, TypeVector<>>);
+static_assert(std::is_same_v<TypeVector<int>::ChopHead, TypeVector<>>);
+static_assert(std::is_same_v<TypeVector<int, char>::ChopHead, TypeVector<char>>);
+
+static_assert(std::is_same_v<TypeVector<>::ChopHeads<0>, TypeVector<>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::ChopHeads<0>,
+                             TypeVector<int, char, double>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::ChopHeads<1>,
+                             TypeVector<char, double>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::ChopHeads<2>,
+                             TypeVector<double>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::ChopHeads<3>,
+                             TypeVector<>>);
 
 static_assert(TypeVector<>::find_if<std::is_unsigned>() == 0);
 static_assert(TypeVector<int, unsigned int>::find_if<std::is_unsigned>() == 1);
