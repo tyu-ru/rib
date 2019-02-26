@@ -82,6 +82,16 @@ private:
         };
         using type = typename Inner<len, void>::type;
     };
+    template <std::size_t i, class T>
+    struct Replace_impl
+    {
+        template <std::size_t j>
+        struct Inner
+        {
+            using type = std::conditional_t<j == i, T, Element<j>>;
+        };
+        using type = typename Transform_impl<Inner>::type;
+    };
 
 public:
     template <template <std::size_t> class UnaryOperation>
@@ -105,6 +115,12 @@ public:
 
     template <std::size_t pos, std::size_t len = size - pos>
     using Mid = typename Rotate<pos>::template Left<len>;
+
+    template <std::size_t i, class T>
+    using Replace = typename Replace_impl<i, T>::type;
+
+    template <std::size_t i, std::size_t j>
+    using Swap = typename Replace<i, Element<j>>::template Replace<j, Element<i>>;
 
     template <class Predicate>
     static constexpr std::size_t find_if([[maybe_unused]] Predicate pred)
@@ -234,6 +250,14 @@ static_assert(std::is_same_v<TypeVector<int, char, double>::Mid<2>,
 static_assert(std::is_same_v<TypeVector<int, char, double>::Mid<3>,
                              TypeVector<>>);
 
+static_assert(std::is_same_v<TypeVector<int, char, double>::Replace<2, float>,
+                             TypeVector<int, char, float>>);
+
+static_assert(std::is_same_v<TypeVector<int, char>::Swap<0, 1>,
+                             TypeVector<char, int>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Swap<0, 2>,
+                             TypeVector<double, char, int>>);
+
 static_assert(TypeVector<>::find_if<std::is_unsigned>() == 0);
 static_assert(TypeVector<int, unsigned int>::find_if<std::is_unsigned>() == 1);
 
@@ -296,48 +320,6 @@ static_assert(std::is_same_v<TypeVector_cat_t<TypeVector<int>, TypeVector<char>,
                              TypeVector<int, char, double>>);
 
 /*
-template <class TypeVec, std::size_t i, class T>
-struct TypeVector_replace
-{
-private:
-    template <std::size_t x>
-    using elm = TypeVector_get_t<TypeVec, x>;
-
-    template <class>
-    struct Inner;
-    template <std::size_t... index>
-    struct Inner<std::index_sequence<index...>>
-    {
-        using type = TypeVector<std::conditional_t<index != i, elm<index>, T>...>;
-    };
-
-public:
-    using type = typename Inner<std::make_index_sequence<TypeVec::size>>::type;
-};
-template <class TypeVec, std::size_t i, class T>
-using TypeVector_replace_t = typename TypeVector_replace<TypeVec, i, T>::type;
-
-static_assert(std::is_same_v<TypeVector_replace_t<TypeVector<int, char, double>, 2, float>,
-                             TypeVector<int, char, float>>);
-
-template <class TypeVec, std::size_t i, std::size_t j>
-struct TypeVector_swap
-{
-private:
-    template <std::size_t x>
-    using elm = TypeVector_get_t<TypeVec, x>;
-
-public:
-    using type = TypeVector_replace_t<TypeVector_replace_t<TypeVec, j, elm<i>>, i, elm<j>>;
-};
-template <class TypeVec, std::size_t i, std::size_t j>
-using TypeVector_swap_t = typename TypeVector_swap<TypeVec, i, j>::type;
-
-static_assert(std::is_same_v<TypeVector_swap_t<TypeVector<int, char>, 0, 1>,
-                             TypeVector<char, int>>);
-static_assert(std::is_same_v<TypeVector_swap_t<TypeVector<int, char, double>, 0, 2>,
-                             TypeVector<double, char, int>>);
-
 template <class TT1, class TT2, class Compare>
 constexpr auto TypeVector_merge(Compare compare)
 {
