@@ -33,7 +33,6 @@ private:
         using type = typename Inner<std::make_index_sequence<size>>::type;
     };
 
-private:
     template <std::size_t i>
     struct Reverse_impl
     {
@@ -97,6 +96,15 @@ public:
 
     template <std::size_t len>
     using ChopHeads = typename ChopHeads_impl<len>::type;
+
+    template <std::size_t len>
+    using Right = ChopHeads<size - len>;
+
+    template <std::size_t len>
+    using Left = typename Reverse::template Right<len>::Reverse;
+
+    template <std::size_t pos, std::size_t len = size - pos>
+    using Mid = typename Rotate<pos>::template Left<len>;
 
     template <class Predicate>
     static constexpr std::size_t find_if([[maybe_unused]] Predicate pred)
@@ -178,6 +186,54 @@ static_assert(std::is_same_v<TypeVector<int, char, double>::ChopHeads<2>,
 static_assert(std::is_same_v<TypeVector<int, char, double>::ChopHeads<3>,
                              TypeVector<>>);
 
+static_assert(std::is_same_v<TypeVector<>::Right<0>,
+                             TypeVector<>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Right<0>,
+                             TypeVector<>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Right<1>,
+                             TypeVector<double>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Right<2>,
+                             TypeVector<char, double>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Right<3>,
+                             TypeVector<int, char, double>>);
+
+static_assert(std::is_same_v<TypeVector<>::Left<0>,
+                             TypeVector<>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Left<0>,
+                             TypeVector<>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Left<1>,
+                             TypeVector<int>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Left<2>,
+                             TypeVector<int, char>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Left<3>,
+                             TypeVector<int, char, double>>);
+
+static_assert(std::is_same_v<TypeVector<int, char, double>::Mid<0, 0>,
+                             TypeVector<>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Mid<0, 1>,
+                             TypeVector<int>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Mid<0, 2>,
+                             TypeVector<int, char>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Mid<0, 3>,
+                             TypeVector<int, char, double>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Mid<1, 0>,
+                             TypeVector<>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Mid<1, 1>,
+                             TypeVector<char>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Mid<1, 2>,
+                             TypeVector<char, double>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Mid<2, 1>,
+                             TypeVector<double>>);
+
+static_assert(std::is_same_v<TypeVector<int, char, double>::Mid<0>,
+                             TypeVector<int, char, double>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Mid<1>,
+                             TypeVector<char, double>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Mid<2>,
+                             TypeVector<double>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Mid<3>,
+                             TypeVector<>>);
+
 static_assert(TypeVector<>::find_if<std::is_unsigned>() == 0);
 static_assert(TypeVector<int, unsigned int>::find_if<std::is_unsigned>() == 1);
 
@@ -240,106 +296,6 @@ static_assert(std::is_same_v<TypeVector_cat_t<TypeVector<int>, TypeVector<char>,
                              TypeVector<int, char, double>>);
 
 /*
-template <class TypeVec, std::size_t length>
-struct TypeVector_right
-{
-    static_assert(length <= TypeVec::size);
-
-private:
-    template <std::size_t x, class TT>
-    struct TrimHead
-    {
-    private:
-        template <class>
-        struct Inner;
-        template <class T, class... Args>
-        struct Inner<TypeVector<T, Args...>>
-        {
-            using type = typename TrimHead<x - 1, TypeVector<Args...>>::type;
-        };
-
-    public:
-        using type = typename Inner<TT>::type;
-    };
-    template <class TT>
-    struct TrimHead<0, TT>
-    {
-        using type = TT;
-    };
-
-public:
-    using type = typename TrimHead<TypeVec::size - length, TypeVec>::type;
-};
-template <class TypeVec, std::size_t length>
-using TypeVector_right_t = typename TypeVector_right<TypeVec, length>::type;
-
-static_assert(std::is_same_v<TypeVector_right_t<TypeVector<>, 0>,
-                             TypeVector<>>);
-static_assert(std::is_same_v<TypeVector_right_t<TypeVector<int, char, double>, 0>,
-                             TypeVector<>>);
-static_assert(std::is_same_v<TypeVector_right_t<TypeVector<int, char, double>, 1>,
-                             TypeVector<double>>);
-static_assert(std::is_same_v<TypeVector_right_t<TypeVector<int, char, double>, 2>,
-                             TypeVector<char, double>>);
-static_assert(std::is_same_v<TypeVector_right_t<TypeVector<int, char, double>, 3>,
-                             TypeVector<int, char, double>>);
-
-template <class TypeVec, std::size_t length>
-struct TypeVector_left
-{
-    static_assert(length <= TypeVec::size);
-    using type = TypeVector_right_t<TypeVector_rotate_t<TypeVec, length>, length>;
-};
-template <class TypeVec, std::size_t length>
-using TypeVector_left_t = typename TypeVector_left<TypeVec, length>::type;
-
-static_assert(std::is_same_v<TypeVector_left_t<TypeVector<>, 0>,
-                             TypeVector<>>);
-static_assert(std::is_same_v<TypeVector_left_t<TypeVector<int, char, double>, 0>,
-                             TypeVector<>>);
-static_assert(std::is_same_v<TypeVector_left_t<TypeVector<int, char, double>, 1>,
-                             TypeVector<int>>);
-static_assert(std::is_same_v<TypeVector_left_t<TypeVector<int, char, double>, 2>,
-                             TypeVector<int, char>>);
-static_assert(std::is_same_v<TypeVector_left_t<TypeVector<int, char, double>, 3>,
-                             TypeVector<int, char, double>>);
-
-template <class TypeVec, std::size_t pos, std::size_t length = TypeVec::size - pos>
-struct TypeVector_mid
-{
-    static_assert(pos <= TypeVec::size);
-    static_assert(pos + length <= TypeVec::size);
-    using type = TypeVector_left_t<TypeVector_rotate_t<TypeVec, pos>, length>;
-};
-template <class TypeVec, std::size_t pos, std::size_t length = TypeVec::size - pos>
-using TypeVector_mid_t = typename TypeVector_mid<TypeVec, pos, length>::type;
-
-static_assert(std::is_same_v<TypeVector_mid_t<TypeVector<int, char, double>, 0, 0>,
-                             TypeVector<>>);
-static_assert(std::is_same_v<TypeVector_mid_t<TypeVector<int, char, double>, 0, 1>,
-                             TypeVector<int>>);
-static_assert(std::is_same_v<TypeVector_mid_t<TypeVector<int, char, double>, 0, 2>,
-                             TypeVector<int, char>>);
-static_assert(std::is_same_v<TypeVector_mid_t<TypeVector<int, char, double>, 0, 3>,
-                             TypeVector<int, char, double>>);
-static_assert(std::is_same_v<TypeVector_mid_t<TypeVector<int, char, double>, 1, 0>,
-                             TypeVector<>>);
-static_assert(std::is_same_v<TypeVector_mid_t<TypeVector<int, char, double>, 1, 1>,
-                             TypeVector<char>>);
-static_assert(std::is_same_v<TypeVector_mid_t<TypeVector<int, char, double>, 1, 2>,
-                             TypeVector<char, double>>);
-static_assert(std::is_same_v<TypeVector_mid_t<TypeVector<int, char, double>, 2, 1>,
-                             TypeVector<double>>);
-
-static_assert(std::is_same_v<TypeVector_mid_t<TypeVector<int, char, double>, 0>,
-                             TypeVector<int, char, double>>);
-static_assert(std::is_same_v<TypeVector_mid_t<TypeVector<int, char, double>, 1>,
-                             TypeVector<char, double>>);
-static_assert(std::is_same_v<TypeVector_mid_t<TypeVector<int, char, double>, 2>,
-                             TypeVector<double>>);
-static_assert(std::is_same_v<TypeVector_mid_t<TypeVector<int, char, double>, 3>,
-                             TypeVector<>>);
-
 template <class TypeVec, std::size_t i, class T>
 struct TypeVector_replace
 {
