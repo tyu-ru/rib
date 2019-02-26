@@ -375,36 +375,41 @@ static_assert(std::is_same_v<TypeVector_merge_t<TypeVector<INT<1>, INT<3>, INT<4
 
 } // namespace impl_tests
 
-/*
-template <class TypeVec, class Compare>
-constexpr auto TypeVector_sort([[maybe_unused]] Compare compare)
+template <class TypeVec, const auto& compare>
+struct TypeVector_sort
 {
-    constexpr auto s = TypeVec::size;
-    if constexpr (s < 2) {
-        return TypeVec{};
-    } else {
-        using L = decltype(TypeVector_sort<TypeVector_left_t<TypeVec, s / 2>>(compare));
-        using R = decltype(TypeVector_sort<TypeVector_mid_t<TypeVec, s / 2>>(compare));
-        return TypeVector_merge<L, R>(compare);
+private:
+    static constexpr auto impl()
+    {
+        constexpr auto s = TypeVec::size;
+        if constexpr (s < 2) {
+            return TypeVec{};
+        } else {
+            using L = typename TypeVector_sort<typename TypeVec::template Left<s / 2>, compare>::type;
+            using R = typename TypeVector_sort<typename TypeVec::template Mid<s / 2>, compare>::type;
+            return TypeVector_merge_t<L, R, compare>{};
+        }
     }
-}
 
-template <class TypeVec, auto compare>
-using TypeVector_sort_t = decltype(TypeVector_sort<TypeVec>(compare));
+public:
+    using type = std::invoke_result_t<decltype(impl)>;
+};
+
+template <class TypeVec, const auto& compare>
+using TypeVector_sort_t = typename TypeVector_sort<TypeVec, compare>::type;
 
 namespace impl_tests
 {
-static_assert(std::is_same_v<decltype(TypeVector_sort<TypeVector<>>(lmd)),
+static_assert(std::is_same_v<TypeVector_sort_t<TypeVector<>, lmd>,
                              TypeVector<>>);
-static_assert(std::is_same_v<decltype(TypeVector_sort<TypeVector<INT<1>>>(lmd)),
+static_assert(std::is_same_v<TypeVector_sort_t<TypeVector<INT<1>>, lmd>,
                              TypeVector<INT<1>>>);
-static_assert(std::is_same_v<decltype(TypeVector_sort<TypeVector<INT<1>, INT<2>>>(lmd)),
+static_assert(std::is_same_v<TypeVector_sort_t<TypeVector<INT<1>, INT<2>>, lmd>,
                              TypeVector<INT<1>, INT<2>>>);
-static_assert(std::is_same_v<decltype(TypeVector_sort<TypeVector<INT<1>, INT<2>, INT<3>, INT<4>, INT<5>>>(lmd)),
+static_assert(std::is_same_v<TypeVector_sort_t<TypeVector<INT<1>, INT<2>, INT<3>, INT<4>, INT<5>>, lmd>,
                              TypeVector<INT<1>, INT<2>, INT<3>, INT<4>, INT<5>>>);
-static_assert(std::is_same_v<decltype(TypeVector_sort<TypeVector<INT<5>, INT<3>, INT<4>, INT<1>, INT<2>>>(lmd)),
+static_assert(std::is_same_v<TypeVector_sort_t<TypeVector<INT<5>, INT<3>, INT<4>, INT<1>, INT<2>>, lmd>,
                              TypeVector<INT<1>, INT<2>, INT<3>, INT<4>, INT<5>>>);
-} // namespace test_TypeVector
+} // namespace impl_tests
 
-*/
 } // namespace rib::type::vector
