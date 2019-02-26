@@ -32,6 +32,16 @@ struct TypeVector
         using type = typename Inner<std::make_index_sequence<size>>::type;
     };
 
+private:
+    template <std::size_t i>
+    struct Reverse_impl
+    {
+        using type = Element<size - i - 1>;
+    };
+
+public:
+    using Reverse = typename Transform<Reverse_impl>::type;
+
     template <class Predicate>
     static constexpr std::size_t find_if([[maybe_unused]] Predicate pred)
     {
@@ -83,6 +93,10 @@ static_assert(TypeVector<int, char>::size == 2);
 
 static_assert(std::is_same_v<TypeVector<int, char>::Element<0>, int>);
 static_assert(std::is_same_v<TypeVector<int, char>::Element<1>, char>);
+
+static_assert(std::is_same_v<TypeVector<>::Reverse, TypeVector<>>);
+static_assert(std::is_same_v<TypeVector<int, char, double>::Reverse,
+                             TypeVector<double, char, int>>);
 
 static_assert(TypeVector<>::find_if<std::is_unsigned>() == 0);
 static_assert(TypeVector<int, unsigned int>::find_if<std::is_unsigned>() == 1);
@@ -146,28 +160,6 @@ static_assert(std::is_same_v<TypeVector_cat_t<TypeVector<int>, TypeVector<char>,
                              TypeVector<int, char, double>>);
 
 /*
-template <class TypeVec>
-struct TypeVector_reverse
-{
-private:
-    template <class>
-    struct Inner;
-    template <std::size_t... i>
-    struct Inner<std::index_sequence<i...>>
-    {
-        using type = TypeVector<TypeVector_get_t<TypeVec, (TypeVec::size - i - 1)>...>;
-    };
-
-public:
-    using type = typename Inner<std::make_index_sequence<TypeVec::size>>::type;
-};
-template <class TypeVec>
-using TypeVector_reverse_t = typename TypeVector_reverse<TypeVec>::type;
-static_assert(std::is_same_v<TypeVector_reverse_t<TypeVector<>>, TypeVector<>>);
-static_assert(std::is_same_v<TypeVector_reverse_t<TypeVector<int, char, double>>,
-                             TypeVector<double, char, int>>);
-
-
 template <class TypeVec, std::size_t mid>
 struct TypeVector_rotate
 {
