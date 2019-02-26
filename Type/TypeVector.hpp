@@ -16,8 +16,9 @@ struct TypeVector
     template <std::size_t i>
     using Element = std::tuple_element_t<i, std_tuple>;
 
+private:
     template <template <std::size_t> class UnaryOperation>
-    struct Transform
+    struct Transform_impl
     {
     private:
         template <class>
@@ -42,20 +43,40 @@ private:
     template <std::size_t mid>
     struct Rotate_impl
     {
+        static_assert(mid <= size);
         template <std::size_t i>
         struct Inner
         {
             using type = Element<(i + mid) % size>;
         };
-        static_assert(mid <= size);
-        using type = typename Transform<Inner>::type;
+        using type = typename Transform_impl<Inner>::type;
+    };
+
+    struct ChopHead_impl
+    {
+        template <class...>
+        struct Inner
+        {
+            using type = TypeVector<>;
+        };
+        template <class T, class... Args2>
+        struct Inner<T, Args2...>
+        {
+            using type = TypeVector<Args2...>;
+        };
+        using type = typename Inner<Args...>::type;
     };
 
 public:
-    using Reverse = typename Transform<Reverse_impl>::type;
+    template <template <std::size_t> class UnaryOperation>
+    using Transform = typename Transform_impl<UnaryOperation>::type;
+
+    using Reverse = Transform<Reverse_impl>;
 
     template <std::size_t mid>
     using Rotate = typename Rotate_impl<mid>::type;
+
+    using ChopHead = typename ChopHead_impl::type;
 
     template <class Predicate>
     static constexpr std::size_t find_if([[maybe_unused]] Predicate pred)
@@ -112,6 +133,10 @@ static_assert(std::is_same_v<TypeVector<int, char>::Element<1>, char>);
 static_assert(std::is_same_v<TypeVector<>::Reverse, TypeVector<>>);
 static_assert(std::is_same_v<TypeVector<int, char, double>::Reverse,
                              TypeVector<double, char, int>>);
+
+static_assert(std::is_same_v<TypeVector<>::ChopHead, TypeVector<>>);
+static_assert(std::is_same_v<TypeVector<int>::ChopHead, TypeVector<>>);
+static_assert(std::is_same_v<TypeVector<int, char>::ChopHead, TypeVector<char>>);
 
 static_assert(std::is_same_v<TypeVector<>::Rotate<0>, TypeVector<>>);
 static_assert(std::is_same_v<TypeVector<int, char, double>::Rotate<0>,
