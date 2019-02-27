@@ -16,6 +16,9 @@ struct TypeVector
     template <std::size_t i>
     using Element = std::tuple_element_t<i, std_tuple>;
 
+    template <template <class...> class Template>
+    using Apply = Template<Args...>;
+
 private:
     template <template <std::size_t> class UnaryOperation>
     struct Transform_impl
@@ -173,6 +176,8 @@ static_assert(TypeVector<int, char>::size == 2);
 
 static_assert(std::is_same_v<TypeVector<int, char>::Element<0>, int>);
 static_assert(std::is_same_v<TypeVector<int, char>::Element<1>, char>);
+
+static_assert(std::is_same_v<TypeVector<int, char>::Apply<std::tuple>, std::tuple<int, char>>);
 
 static_assert(std::is_same_v<TypeVector<>::Reverse, TypeVector<>>);
 static_assert(std::is_same_v<TypeVector<int, char, double>::Reverse,
