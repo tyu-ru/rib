@@ -113,31 +113,34 @@ public:
     /// reverse elements
     using Reverse = Transform<Reverse_impl>;
 
-    /**
-     * @brief rotation elements
-     * @details rotate sequence of elements that element `mid` is at the beginning.
-     * @tparam mid top
-     */
+    /// rotate sequence of elements that element `mid` is at the beginning.
     template <std::size_t mid>
     using Rotate = typename Rotate_impl<mid>::type;
 
+    /// sequence that contains the `size - 1` rightmost types this sequence.
     using ChopHead = typename ChopHead_impl::type;
 
+    /// sequence that contains the `size - len` rightmost types this sequence.
     template <std::size_t len>
     using ChopHeads = typename ChopHeads_impl<len>::type;
 
+    /// sequence that contains the `len` rightmost types this sequence.
     template <std::size_t len>
     using Right = ChopHeads<size - len>;
 
+    /// sequence that contains the `len` leftmost types this sequence.
     template <std::size_t len>
     using Left = typename Reverse::template Right<len>::Reverse;
 
+    /// sequence that contains `len` types of this seqence, starting at the sqecified `pos` index.
     template <std::size_t pos, std::size_t len = size - pos>
     using Mid = typename Rotate<pos>::template Left<len>;
 
+    /// replace element at i with T
     template <std::size_t i, class T>
     using Replace = typename Replace_impl<i, T>::type;
 
+    /// swap element i & element j
     template <std::size_t i, std::size_t j>
     using Swap = typename Replace<i, Element<j>>::template Replace<j, Element<i>>;
 
@@ -303,22 +306,7 @@ static_assert(TypeSequence<int>::unique());
 static_assert(TypeSequence<int, char>::unique());
 static_assert(!TypeSequence<int, int>::unique());
 
-template <class... Args>
-struct TypeSequence_gen
-{
-    using type = TypeSequence<Args...>;
-};
-template <class... Args>
-struct TypeSequence_gen<std::tuple<Args...>>
-{
-    using type = TypeSequence<Args...>;
-};
-template <class... Args>
-using TypeSequence_gen_t = typename TypeSequence_gen<Args...>::type;
-
-static_assert(std::is_same_v<TypeSequence_gen_t<int, char>, TypeSequence<int, char>>);
-static_assert(std::is_same_v<TypeSequence_gen_t<std::tuple<int, char>>, TypeSequence<int, char>>);
-
+/// concatenate sequences.
 template <class...>
 struct TypeSequence_cat;
 template <class... Args1, class... Args2>
