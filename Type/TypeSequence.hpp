@@ -82,18 +82,17 @@ private:
     struct ChopHeads_impl
     {
         static_assert(len <= size);
-        template <std::size_t len2, class>
-        struct Inner
+        static constexpr auto impl()
         {
-            using type = typename ChopHead_impl::type::template ChopHeads<len - 1>;
-        };
-        template <class Dummy>
-        struct Inner<0, Dummy>
-        {
-            using type = TypeSequence<Args...>;
-        };
-        using type = typename Inner<len, void>::type;
+            if constexpr (len == 0) {
+                return TypeSequence<Args...>{};
+            } else {
+                return typename ChopHead_impl::type::template ChopHeads<len - 1>{};
+            }
+        }
+        using type = std::invoke_result_t<decltype(impl)>;
     };
+
     template <std::size_t i, class T>
     struct Replace_impl
     {
