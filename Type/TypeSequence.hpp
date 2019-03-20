@@ -166,6 +166,15 @@ public:
     template <class T>
     static constexpr std::size_t count = count_if<TemplateBind<std::is_same, T>::template type1>;
 
+    template <template <class> class Pred>
+    static constexpr bool any_of = count_if<Pred> != 0;
+
+    template <template <class> class Pred>
+    static constexpr bool all_of = count_if<Pred> == size;
+
+    template <template <class> class Pred>
+    static constexpr bool none_of = !any_of<Pred>;
+
     template <class T>
     static constexpr bool contain = count<T> != 0;
 
@@ -284,14 +293,23 @@ static_assert(TypeSequence<int, char>::count<char> == 1);
 static_assert(TypeSequence<int, int>::count<int> == 2);
 static_assert(TypeSequence<int, char>::count<double> == 0);
 
-static_assert(TypeSequence<int>::contain<int>);
-static_assert(TypeSequence<int, char>::contain<char>);
-static_assert(!TypeSequence<int, char>::contain<double>);
+static_assert(TypeSequence<int, char>::any_of<std::is_unsigned> == false);
+static_assert(TypeSequence<unsigned int, char>::any_of<std::is_unsigned> == true);
 
-static_assert(TypeSequence<>::unique);
-static_assert(TypeSequence<int>::unique);
-static_assert(TypeSequence<int, char>::unique);
-static_assert(!TypeSequence<int, int>::unique);
+static_assert(TypeSequence<int, char>::all_of<std::is_signed> == true);
+static_assert(TypeSequence<unsigned int, char>::all_of<std::is_signed> == false);
+
+static_assert(TypeSequence<int, char>::none_of<std::is_unsigned> == true);
+static_assert(TypeSequence<unsigned int, char>::none_of<std::is_unsigned> == false);
+
+static_assert(TypeSequence<int>::contain<int> == true);
+static_assert(TypeSequence<int, char>::contain<char> == true);
+static_assert(TypeSequence<int, char>::contain<double> == false);
+
+static_assert(TypeSequence<>::unique == true);
+static_assert(TypeSequence<int>::unique == true);
+static_assert(TypeSequence<int, char>::unique == true);
+static_assert(TypeSequence<int, int>::unique == false);
 
 /// concatenate sequences.
 template <class...>
