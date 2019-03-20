@@ -30,7 +30,7 @@ struct TypeSequence
 
 private:
     template <template <std::size_t> class UnaryOperation>
-    struct Transform_impl
+    struct TransformByIndex_impl
     {
     private:
         template <class>
@@ -60,7 +60,7 @@ private:
         {
             using type = Element<(i + mid) % size>;
         };
-        using type = typename Transform_impl<Inner>::type;
+        using type = typename TransformByIndex_impl<Inner>::type;
     };
 
     struct ChopHead_impl
@@ -101,16 +101,20 @@ private:
         {
             using type = std::conditional_t<j == i, T, Element<j>>;
         };
-        using type = typename Transform_impl<Inner>::type;
+        using type = typename TransformByIndex_impl<Inner>::type;
     };
 
 public:
     /// transform elements
+    template <template <class> class UnaryOperation>
+    using Transform = TypeSequence<typename UnaryOperation<Args>::type...>;
+
+    /// transform elements
     template <template <std::size_t> class UnaryOperation>
-    using Transform = typename Transform_impl<UnaryOperation>::type;
+    using TransformByIndex = typename TransformByIndex_impl<UnaryOperation>::type;
 
     /// reverse elements
-    using Reverse = Transform<Reverse_impl>;
+    using Reverse = TransformByIndex<Reverse_impl>;
 
     /// rotate sequence of elements that element `mid` is at the beginning.
     template <std::size_t mid>
@@ -191,6 +195,9 @@ static_assert(std::is_same_v<TypeSequence<int, char>::Element<1>, char>);
 
 static_assert(std::is_same_v<TypeSequence<int, char>::Apply<std::tuple>, std::tuple<int, char>>);
 static_assert(std::is_same_v<TypeSequence<int, char>::std_tuple, std::tuple<int, char>>);
+
+static_assert(std::is_same_v<TypeSequence<int, char>::Transform<std::add_const>,
+                             TypeSequence<const int, const char>>);
 
 static_assert(std::is_same_v<TypeSequence<>::Reverse, TypeSequence<>>);
 static_assert(std::is_same_v<TypeSequence<int, char, double>::Reverse,
