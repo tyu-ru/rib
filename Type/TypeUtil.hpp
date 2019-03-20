@@ -1,8 +1,8 @@
 #pragma once
-#include <utility>
+#include <type_traits>
 
 /// handling type information
-namespace rib::type::handle
+namespace rib::type
 {
 
 /**
@@ -23,7 +23,7 @@ struct TypeAdapter
  * @tparam Template class template
  */
 template <template <class...> class Template>
-struct TemplateAdaperByType
+struct TemplateAdapterByType
 {
     /**
      * @brief template specialization
@@ -46,7 +46,7 @@ struct TemplateAdaperByType
  * @tparam Template class template
  */
 template <template <auto...> class Template>
-struct TemplateAdaperByValue
+struct TemplateAdapterByValue
 {
     /**
      * @brief template specialization
@@ -64,4 +64,32 @@ struct TemplateAdaperByValue
     using TypeAdapter = TypeAdapter<Template<args...>>;
 };
 
-} // namespace rib::type::handle
+template <template <class...> class Template, class... BoundArgs>
+struct TemplateBind
+{
+    template <class... Args>
+    struct type : Template<BoundArgs..., Args...>
+    {
+    };
+    template <class Arg1>
+    struct type1 : type<Arg1>
+    {
+    };
+    template <class Arg1, class Arg2>
+    struct type2 : type<Arg1, Arg2>
+    {
+    };
+    template <class Arg1, class Arg2, class Arg3>
+    struct type3 : type<Arg1, Arg2, Arg3>
+    {
+    };
+    template <class Arg1, class Arg2, class Arg3, class Arg4>
+    struct type4 : type<Arg1, Arg2, Arg3, Arg4>
+    {
+    };
+};
+
+static_assert(TemplateBind<std::is_same, int>::type1<int>::value);
+static_assert(TemplateAdapterByType<TemplateBind<std::is_same, int>::type1>::Specialize<int>::value);
+
+} // namespace rib::type

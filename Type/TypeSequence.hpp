@@ -1,7 +1,7 @@
 #pragma once
 
 #include <tuple>
-#include <optional>
+#include <algorithm>
 #include "TypeUtil.hpp"
 
 namespace rib::type
@@ -143,36 +143,27 @@ public:
     template <std::size_t i, std::size_t j>
     using Swap = typename Replace<i, Element<j>>::template Replace<j, Element<i>>;
 
-    template <class Predicate>
-    static constexpr std::size_t find_if([[maybe_unused]] Predicate pred)
-    {
+    template <template <class> class Pred>
+    static constexpr std::size_t find_if = [] {
         if constexpr (size == 0) {
             return 0;
         } else {
             std::size_t result{};
-            for (bool b : {pred(handle::TypeAdapter<Args>{})...}) {
+            for (bool b : {Pred<Args>::value...}) {
                 if (b) return result;
                 ++result;
             }
             return result;
         }
-    }
-    template <template <class> class Pred>
-    static constexpr std::size_t find_if()
-    {
-        return find_if([](auto x) { return Pred<typename decltype(x)::type>::value; });
-    }
+    }();
 
     template <class T>
-    static constexpr std::size_t find()
-    {
-        return find_if([](auto x) { return std::is_same_v<T, typename decltype(x)::type>; });
-    }
+    static constexpr std::size_t find = find_if<TemplateBind<std::is_same, T>::template type1>;
 
     template <class Predicate>
     static constexpr std::size_t count_if([[maybe_unused]] Predicate pred)
     {
-        return (0 + ... + (pred(handle::TypeAdapter<Args>{}) ? 1 : 0));
+        return (0 + ... + (pred(TypeAdapter<Args>{}) ? 1 : 0));
     }
 
     template <class T>
@@ -282,13 +273,13 @@ static_assert(std::is_same_v<TypeSequence<int, char>::Swap<0, 1>,
 static_assert(std::is_same_v<TypeSequence<int, char, double>::Swap<0, 2>,
                              TypeSequence<double, char, int>>);
 
-static_assert(TypeSequence<>::find_if<std::is_unsigned>() == 0);
-static_assert(TypeSequence<int, unsigned int>::find_if<std::is_unsigned>() == 1);
+static_assert(TypeSequence<>::find_if<std::is_unsigned> == 0);
+static_assert(TypeSequence<int, unsigned int>::find_if<std::is_unsigned> == 1);
 
-static_assert(TypeSequence<>::find<int>() == 0);
-static_assert(TypeSequence<int>::find<int>() == 0);
-static_assert(TypeSequence<int, char>::find<char>() == 1);
-static_assert(TypeSequence<int, char>::find<double>() == 2);
+static_assert(TypeSequence<>::find<int> == 0);
+static_assert(TypeSequence<int>::find<int> == 0);
+static_assert(TypeSequence<int, char>::find<char> == 1);
+static_assert(TypeSequence<int, char>::find<double> == 2);
 
 static_assert(TypeSequence<>::count<int>() == 0);
 static_assert(TypeSequence<int>::count<int>() == 1);
@@ -341,7 +332,7 @@ private:
         } else {
             using H1 = typename TS1::template Element<0>;
             using H2 = typename TS2::template Element<0>;
-            if constexpr (compare(handle::TypeAdapter<H1>{}, handle::TypeAdapter<H2>{})) {
+            if constexpr (compare(TypeAdapter<H1>{}, TypeAdapter<H2>{})) {
                 return TypeSequence_cat_t<TypeSequence<H1>, typename TypeSequence_merge<typename TS1::ChopHead, TS2, compare>::type>{};
             } else {
                 return TypeSequence_cat_t<TypeSequence<H2>, typename TypeSequence_merge<typename TS2::ChopHead, TS1, compare>::type>{};
