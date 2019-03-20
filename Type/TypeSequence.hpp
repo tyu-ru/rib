@@ -160,22 +160,16 @@ public:
     template <class T>
     static constexpr std::size_t find = find_if<TemplateBind<std::is_same, T>::template type1>;
 
-    template <class Predicate>
-    static constexpr std::size_t count_if([[maybe_unused]] Predicate pred)
-    {
-        return (0 + ... + (pred(TypeAdapter<Args>{}) ? 1 : 0));
-    }
+    template <template <class> class Pred>
+    static constexpr std::size_t count_if = (0 + ... + (Pred<Args>::value ? 1 : 0));
 
     template <class T>
-    static constexpr std::size_t count()
-    {
-        return count_if([](auto x) { return std::is_same_v<T, typename decltype(x)::type>; });
-    }
+    static constexpr std::size_t count = count_if<TemplateBind<std::is_same, T>::template type1>;
 
     template <class T>
-    static constexpr bool contain() { return count<T>() != 0; }
+    static constexpr bool contain = count<T> != 0;
 
-    static constexpr bool unique() { return (... && (count<Args>() == 1)); }
+    static constexpr bool unique = (... && (count<Args> == 1));
 };
 
 static_assert(sizeof(TypeSequence<int, char, double>) == 1);
@@ -281,20 +275,23 @@ static_assert(TypeSequence<int>::find<int> == 0);
 static_assert(TypeSequence<int, char>::find<char> == 1);
 static_assert(TypeSequence<int, char>::find<double> == 2);
 
-static_assert(TypeSequence<>::count<int>() == 0);
-static_assert(TypeSequence<int>::count<int>() == 1);
-static_assert(TypeSequence<int, char>::count<char>() == 1);
-static_assert(TypeSequence<int, int>::count<int>() == 2);
-static_assert(TypeSequence<int, char>::count<double>() == 0);
+static_assert(TypeSequence<>::count_if<std::is_unsigned> == 0);
+static_assert(TypeSequence<int, unsigned int>::count_if<std::is_unsigned> == 1);
 
-static_assert(TypeSequence<int>::contain<int>());
-static_assert(TypeSequence<int, char>::contain<char>());
-static_assert(!TypeSequence<int, char>::contain<double>());
+static_assert(TypeSequence<>::count<int> == 0);
+static_assert(TypeSequence<int>::count<int> == 1);
+static_assert(TypeSequence<int, char>::count<char> == 1);
+static_assert(TypeSequence<int, int>::count<int> == 2);
+static_assert(TypeSequence<int, char>::count<double> == 0);
 
-static_assert(TypeSequence<>::unique());
-static_assert(TypeSequence<int>::unique());
-static_assert(TypeSequence<int, char>::unique());
-static_assert(!TypeSequence<int, int>::unique());
+static_assert(TypeSequence<int>::contain<int>);
+static_assert(TypeSequence<int, char>::contain<char>);
+static_assert(!TypeSequence<int, char>::contain<double>);
+
+static_assert(TypeSequence<>::unique);
+static_assert(TypeSequence<int>::unique);
+static_assert(TypeSequence<int, char>::unique);
+static_assert(!TypeSequence<int, int>::unique);
 
 /// concatenate sequences.
 template <class...>
