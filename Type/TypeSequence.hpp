@@ -148,7 +148,8 @@ public:
     using Swap = typename Replace<i, Element<j>>::template Replace<j, Element<i>>;
 
     template <template <class> class Pred>
-    static constexpr std::size_t find_if = [] {
+    static constexpr std::size_t find_if_helper()
+    {
         if constexpr (size == 0) {
             return 0;
         } else {
@@ -159,30 +160,50 @@ public:
             }
             return result;
         }
-    }();
+    }
+
+    template <template <class> class Pred>
+    using find_if = std::integral_constant<std::size_t, find_if_helper<Pred>()>;
+    template <template <class> class Pred>
+    static constexpr std::size_t find_if_v = find_if<Pred>::value;
 
     template <class T>
-    static constexpr std::size_t find = find_if<TemplateBind<std::is_same, T>::template type1>;
+    using find = find_if<TemplateBind<std::is_same, T>::template type1>;
+    template <class T>
+    static constexpr std::size_t find_v = find<T>::value;
 
     template <template <class> class Pred>
-    static constexpr std::size_t count_if = (0 + ... + (Pred<Args>::value ? 1 : 0));
+    using count_if = std::integral_constant<std::size_t, (0 + ... + (Pred<Args>::value ? 1 : 0))>;
+    template <template <class> class Pred>
+    static constexpr std::size_t count_if_v = count_if<Pred>::value;
 
     template <class T>
-    static constexpr std::size_t count = count_if<TemplateBind<std::is_same, T>::template type1>;
+    using count = count_if<TemplateBind<std::is_same, T>::template type1>;
+    template <class T>
+    static constexpr std::size_t count_v = count<T>::value;
 
     template <template <class> class Pred>
-    static constexpr bool any_of = count_if<Pred> != 0;
+    using any_of = std::bool_constant<count_if_v<Pred> != 0>;
+    template <template <class> class Pred>
+    static constexpr bool any_of_v = any_of<Pred>::value;
 
     template <template <class> class Pred>
-    static constexpr bool all_of = count_if<Pred> == size;
+    using all_of = std::bool_constant<count_if_v<Pred> == size>;
+    template <template <class> class Pred>
+    static constexpr bool all_of_v = all_of<Pred>::value;
 
     template <template <class> class Pred>
-    static constexpr bool none_of = !any_of<Pred>;
+    using none_of = std::negation<any_of<Pred>>;
+    template <template <class> class Pred>
+    static constexpr bool none_of_v = none_of<Pred>::value;
 
     template <class T>
-    static constexpr bool contain = count<T> != 0;
+    using contain = std::bool_constant<count_v<T> != 0>;
+    template <class T>
+    static constexpr bool contain_v = contain<T>::value;
 
-    static constexpr bool unique = (... && (count<Args> == 1));
+    using unique = std::bool_constant<(... && (count_v<Args> == 1))>;
+    static constexpr bool unique_v = unique::value;
 };
 
 static_assert(sizeof(TypeSequence<int, char, double>) == 1);
@@ -283,40 +304,40 @@ static_assert(std::is_same_v<TypeSequence<int, char>::Swap<0, 1>,
 static_assert(std::is_same_v<TypeSequence<int, char, double>::Swap<0, 2>,
                              TypeSequence<double, char, int>>);
 
-static_assert(TypeSequence<>::find_if<std::is_unsigned> == 0);
-static_assert(TypeSequence<int, unsigned int>::find_if<std::is_unsigned> == 1);
+static_assert(TypeSequence<>::find_if_v<std::is_unsigned> == 0);
+static_assert(TypeSequence<int, unsigned int>::find_if_v<std::is_unsigned> == 1);
 
-static_assert(TypeSequence<>::find<int> == 0);
-static_assert(TypeSequence<int>::find<int> == 0);
-static_assert(TypeSequence<int, char>::find<char> == 1);
-static_assert(TypeSequence<int, char>::find<double> == 2);
+static_assert(TypeSequence<>::find_v<int> == 0);
+static_assert(TypeSequence<int>::find_v<int> == 0);
+static_assert(TypeSequence<int, char>::find_v<char> == 1);
+static_assert(TypeSequence<int, char>::find_v<double> == 2);
 
-static_assert(TypeSequence<>::count_if<std::is_unsigned> == 0);
-static_assert(TypeSequence<int, unsigned int>::count_if<std::is_unsigned> == 1);
+static_assert(TypeSequence<>::count_if_v<std::is_unsigned> == 0);
+static_assert(TypeSequence<int, unsigned int>::count_if_v<std::is_unsigned> == 1);
 
-static_assert(TypeSequence<>::count<int> == 0);
-static_assert(TypeSequence<int>::count<int> == 1);
-static_assert(TypeSequence<int, char>::count<char> == 1);
-static_assert(TypeSequence<int, int>::count<int> == 2);
-static_assert(TypeSequence<int, char>::count<double> == 0);
+static_assert(TypeSequence<>::count_v<int> == 0);
+static_assert(TypeSequence<int>::count_v<int> == 1);
+static_assert(TypeSequence<int, char>::count_v<char> == 1);
+static_assert(TypeSequence<int, int>::count_v<int> == 2);
+static_assert(TypeSequence<int, char>::count_v<double> == 0);
 
-static_assert(TypeSequence<int, char>::any_of<std::is_unsigned> == false);
-static_assert(TypeSequence<unsigned int, char>::any_of<std::is_unsigned> == true);
+static_assert(TypeSequence<int, char>::any_of_v<std::is_unsigned> == false);
+static_assert(TypeSequence<unsigned int, char>::any_of_v<std::is_unsigned> == true);
 
-static_assert(TypeSequence<int, char>::all_of<std::is_signed> == true);
-static_assert(TypeSequence<unsigned int, char>::all_of<std::is_signed> == false);
+static_assert(TypeSequence<int, char>::all_of_v<std::is_signed> == true);
+static_assert(TypeSequence<unsigned int, char>::all_of_v<std::is_signed> == false);
 
-static_assert(TypeSequence<int, char>::none_of<std::is_unsigned> == true);
-static_assert(TypeSequence<unsigned int, char>::none_of<std::is_unsigned> == false);
+static_assert(TypeSequence<int, char>::none_of_v<std::is_unsigned> == true);
+static_assert(TypeSequence<unsigned int, char>::none_of_v<std::is_unsigned> == false);
 
-static_assert(TypeSequence<int>::contain<int> == true);
-static_assert(TypeSequence<int, char>::contain<char> == true);
-static_assert(TypeSequence<int, char>::contain<double> == false);
+static_assert(TypeSequence<int>::contain_v<int> == true);
+static_assert(TypeSequence<int, char>::contain_v<char> == true);
+static_assert(TypeSequence<int, char>::contain_v<double> == false);
 
-static_assert(TypeSequence<>::unique == true);
-static_assert(TypeSequence<int>::unique == true);
-static_assert(TypeSequence<int, char>::unique == true);
-static_assert(TypeSequence<int, int>::unique == false);
+static_assert(TypeSequence<>::unique_v == true);
+static_assert(TypeSequence<int>::unique_v == true);
+static_assert(TypeSequence<int, char>::unique_v == true);
+static_assert(TypeSequence<int, int>::unique_v == false);
 
 /// concatenate sequences.
 template <class...>
