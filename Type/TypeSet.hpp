@@ -33,6 +33,8 @@ struct TypeSet_same<TypeSet<Args1...>, TypeSet<Args2...>>
 private:
     static constexpr bool impl()
     {
+        [[maybe_unused]] TypeSet<Args1...> ts1;
+        [[maybe_unused]] TypeSet<Args2...> ts2;
         using T1 = typename TypeSequence<Args1...>::template Element<0>;
         constexpr auto i = TypeSequence<Args2...>::template find_v<T1>;
         if constexpr (i < sizeof...(Args2)) {
@@ -63,5 +65,27 @@ static_assert(TypeSet_same_v<TypeSet<int>::Insert<int>,
                              TypeSet<int>>);
 static_assert(TypeSet_same_v<TypeSet<int>::Insert<char>,
                              TypeSet<char, int>>);
+
+template <class... Args>
+struct TypeSet_construct
+{
+    using type = TypeSet<>;
+};
+template <class T, class... Args>
+struct TypeSet_construct<T, Args...>
+{
+    using type = typename TypeSet_construct<Args...>::type::template Insert<T>;
+};
+template <class... Args>
+using TypeSet_construct_t = typename TypeSet_construct<Args...>::type;
+
+static_assert(TypeSet_same_v<TypeSet_construct_t<>,
+                             TypeSet<>>);
+static_assert(TypeSet_same_v<TypeSet_construct_t<int>,
+                             TypeSet<int>>);
+static_assert(TypeSet_same_v<TypeSet_construct_t<int, char>,
+                             TypeSet<int, char>>);
+static_assert(TypeSet_same_v<TypeSet_construct_t<int, int>,
+                             TypeSet<int>>);
 
 } // namespace rib::type
