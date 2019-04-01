@@ -5,11 +5,13 @@
 namespace rib::units::dim
 {
 
+/// Dimension of Quantity
 template <int L = 0, int M = 0, int T = 0, int I = 0, int Theta = 0, int N = 0>
 struct Dimension
 {
 };
 
+/// multiplication Dimensions
 template <class...>
 struct ProductDim;
 template <int... Args1, int... Args2>
@@ -25,6 +27,7 @@ struct ProductDim<Dimension<Args1...>, Dimension<Args2...>, Dim...>
 template <class... Dim>
 using ProductDim_t = typename ProductDim<Dim...>::type;
 
+/// divide dimension
 template <class...>
 struct QuotientDim;
 template <int... Args1, int... Args2>
@@ -35,6 +38,7 @@ struct QuotientDim<Dimension<Args1...>, Dimension<Args2...>>
 template <class Dim1, class Dim2>
 using QuotientDim_t = typename QuotientDim<Dim1, Dim2>::type;
 
+/// reciprocal Dimension
 template <class>
 struct ReciprocalDim;
 template <int... Args>
