@@ -2,22 +2,23 @@
 
 #include <utility>
 #include "Dimension.hpp"
+#include "../Operators.hpp"
 #include "../Type/TypeTraits.hpp"
 #include "../functional_util.hpp"
 
 namespace rib::units
 {
 
-template <class Dimention, class Value = double>
-class Quantity
+template <class Dimension, class Value = double>
+class Quantity : private operators::LessThanComparable<Quantity<Dimension, Value>>
 {
-    static_assert(type::is_template_specialized_by_value_v<dim::Dimension, Dimention>);
+    static_assert(type::is_template_specialized_by_value_v<dim::Dimension, Dimension>);
 
     template <class D, class V>
     friend class Quantity;
 
 public:
-    using DimensionType = Dimention;
+    using DimensionType = Dimension;
     using ValueType = Value;
 
 public:
@@ -75,10 +76,27 @@ static_assert(std::is_assignable_v<Quantity<dim::Dimension<>, int>&, Quantity<di
 static_assert(std::is_assignable_v<Quantity<dim::Dimension<>, int>&, Quantity<dim::Dimension<1>, int>> == false);
 static_assert(std::is_assignable_v<Quantity<dim::Dimension<>, int>&, int> == false);
 
-static_assert(func::is_lessable_r_v<bool, Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
-static_assert(func::is_lessable_r_v<bool, Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
-static_assert(func::is_lessable_r_v<bool, Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
+static_assert(func::is_lessable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
+static_assert(func::is_lessable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
+static_assert(func::is_lessable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
+
+static_assert(func::is_less_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
+static_assert(func::is_less_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
+static_assert(func::is_less_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
+
+static_assert(func::is_greaterable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
+static_assert(func::is_greaterable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
+static_assert(func::is_greaterable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
+
+static_assert(func::is_greater_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
+static_assert(func::is_greater_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
+static_assert(func::is_greater_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
 
 static_assert(Quantity<dim::Dimension<>, int>{1} < Quantity<dim::Dimension<>, long>{2});
+static_assert(Quantity<dim::Dimension<>, int>{2} > Quantity<dim::Dimension<>, long>{1});
+static_assert(Quantity<dim::Dimension<>, int>{1} <= Quantity<dim::Dimension<>, long>{1});
+static_assert(Quantity<dim::Dimension<>, int>{1} <= Quantity<dim::Dimension<>, long>{2});
+static_assert(Quantity<dim::Dimension<>, int>{1} >= Quantity<dim::Dimension<>, long>{1});
+static_assert(Quantity<dim::Dimension<>, int>{2} >= Quantity<dim::Dimension<>, long>{1});
 
 } // namespace rib::units

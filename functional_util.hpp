@@ -1,3 +1,5 @@
+#pragma once
+
 #include <functional>
 #include <type_traits>
 
@@ -28,6 +30,14 @@ DECLARE_COMPOUND_OPERATOR_FUNCTOR(compound_modulus, %=)
 
 #undef DECLARE_COMPOUND_OPERATOR_FUNCTOR
 
+#define DECLARE_OPERATOR_ABLE_V(name, functor)                  \
+    template <class T, class U>                                 \
+    struct is_##name##able : std::is_invocable<functor<>, T, U> \
+    {                                                           \
+    };                                                          \
+    template <class T, class U>                                 \
+    constexpr bool is_##name##able_v = is_##name##able<T, U>::value;
+
 #define DECLARE_OPERATOR_ABLE_R_V(name, functor)                       \
     template <class R, class T, class U>                               \
     struct is_##name##able_r : std::is_invocable_r<R, functor<>, T, U> \
@@ -44,12 +54,12 @@ DECLARE_OPERATOR_ABLE_R_V(modulus, std::modulus)
 
 DECLARE_OPERATOR_ABLE_R_V(compound_plus, compound_plus)
 
-DECLARE_OPERATOR_ABLE_R_V(equal_to, std::equal_to)
-DECLARE_OPERATOR_ABLE_R_V(not_equal_to, std::not_equal_to)
-DECLARE_OPERATOR_ABLE_R_V(less, std::less)
-DECLARE_OPERATOR_ABLE_R_V(less_equal, std::less_equal)
-DECLARE_OPERATOR_ABLE_R_V(greater, std::greater)
-DECLARE_OPERATOR_ABLE_R_V(greater_equal, std::greater_equal)
+DECLARE_OPERATOR_ABLE_V(equal_to, std::equal_to)
+DECLARE_OPERATOR_ABLE_V(not_equal_to, std::not_equal_to)
+DECLARE_OPERATOR_ABLE_V(less, std::less)
+DECLARE_OPERATOR_ABLE_V(less_equal, std::less_equal)
+DECLARE_OPERATOR_ABLE_V(greater, std::greater)
+DECLARE_OPERATOR_ABLE_V(greater_equal, std::greater_equal)
 
 #undef DECLARE_OPERATOR_ABLE_R_V
 
