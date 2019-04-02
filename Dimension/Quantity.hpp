@@ -74,6 +74,36 @@ public:
         return *this;
     }
 
+    template <class V>
+    constexpr Quantity& operator*=(const Quantity<dim::Dimension<>, V>& rhs)
+    {
+        val *= rhs.val;
+        return *this;
+    }
+    template <class D, class V>
+    constexpr Quantity& operator*=(Quantity<D, V>) = delete;
+    template <class T>
+    constexpr Quantity& operator*=(const T& rhs)
+    {
+        val *= rhs;
+        return *this;
+    }
+
+    template <class V>
+    constexpr Quantity& operator/=(const Quantity<dim::Dimension<>, V>& rhs)
+    {
+        val /= rhs.val;
+        return *this;
+    }
+    template <class D, class V>
+    constexpr Quantity& operator/=(Quantity<D, V>) = delete;
+    template <class T>
+    constexpr Quantity& operator/=(const T& rhs)
+    {
+        val /= rhs;
+        return *this;
+    }
+
 private:
     ValueType val{};
 };
@@ -139,5 +169,18 @@ static_assert(func::is_compound_minusable_v<Quantity<dim::Dimension<>>, Quantity
 
 static_assert((Quantity<dim::Dimension<>, int>{1} += Quantity<dim::Dimension<>, long>{2}).value() == 3);
 static_assert((Quantity<dim::Dimension<>, int>{1} -= Quantity<dim::Dimension<>, long>{2}).value() == -1);
+
+static_assert(func::is_compound_multipliesable_r_v<Quantity<dim::Dimension<1>>&, Quantity<dim::Dimension<1>>, int>);
+static_assert(func::is_compound_multipliesable_r_v<Quantity<dim::Dimension<1>>&, Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<>>>);
+static_assert(func::is_compound_multipliesable_v<Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<1>>> == false);
+
+static_assert(func::is_compound_dividesable_r_v<Quantity<dim::Dimension<1>>&, Quantity<dim::Dimension<1>>, int>);
+static_assert(func::is_compound_dividesable_r_v<Quantity<dim::Dimension<1>>&, Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<>>>);
+static_assert(func::is_compound_dividesable_v<Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<1>>> == false);
+
+static_assert((Quantity<dim::Dimension<>, int>{2} *= 3).value() == 6);
+static_assert((Quantity<dim::Dimension<>, int>{2} *= Quantity<dim::Dimension<>, int>{3}).value() == 6);
+static_assert((Quantity<dim::Dimension<>, int>{6} /= 3).value() == 2);
+static_assert((Quantity<dim::Dimension<>, int>{6} /= Quantity<dim::Dimension<>, int>{3}).value() == 2);
 
 } // namespace rib::units
