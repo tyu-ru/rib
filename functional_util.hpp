@@ -54,8 +54,8 @@ DECLARE_OPERATOR_ABLE_R_V(modulus, std::modulus)
 
 DECLARE_OPERATOR_ABLE_R_V(compound_plus, compound_plus)
 
-DECLARE_OPERATOR_ABLE_V(equal_to, std::equal_to)
-DECLARE_OPERATOR_ABLE_V(not_equal_to, std::not_equal_to)
+DECLARE_OPERATOR_ABLE_V(equal, std::equal_to)
+DECLARE_OPERATOR_ABLE_V(not_equal, std::not_equal_to)
 DECLARE_OPERATOR_ABLE_V(less, std::less)
 DECLARE_OPERATOR_ABLE_V(less_equal, std::less_equal)
 DECLARE_OPERATOR_ABLE_V(greater, std::greater)

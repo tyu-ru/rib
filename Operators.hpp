@@ -29,4 +29,14 @@ struct LessThanComparable
     }
 };
 
+template <class Derived>
+struct EqualityComparable
+{
+    template <class T, std::enable_if_t<func::is_equalable_v<Derived, std::decay_t<T>>, std::nullptr_t> = nullptr>
+    friend constexpr bool operator!=(const Derived& lhs, T&& rhs)
+    {
+        return !(lhs == rhs);
+    }
+};
+
 } // namespace rib::operators

@@ -10,7 +10,8 @@ namespace rib::units
 {
 
 template <class Dimension, class Value = double>
-class Quantity : private operators::LessThanComparable<Quantity<Dimension, Value>>
+class Quantity : operators::LessThanComparable<Quantity<Dimension, Value>>,
+                 operators::EqualityComparable<Quantity<Dimension, Value>>
 {
     static_assert(type::is_template_specialized_by_value_v<dim::Dimension, Dimension>);
 
@@ -53,6 +54,11 @@ public:
     constexpr bool operator<(const Quantity<DimensionType, V>& rhs) const
     {
         return val < rhs.val;
+    }
+    template <class V>
+    constexpr bool operator==(const Quantity<DimensionType, V>& rhs) const
+    {
+        return val == rhs.val;
     }
 
 private:
@@ -98,5 +104,16 @@ static_assert(Quantity<dim::Dimension<>, int>{1} <= Quantity<dim::Dimension<>, l
 static_assert(Quantity<dim::Dimension<>, int>{1} <= Quantity<dim::Dimension<>, long>{2});
 static_assert(Quantity<dim::Dimension<>, int>{1} >= Quantity<dim::Dimension<>, long>{1});
 static_assert(Quantity<dim::Dimension<>, int>{2} >= Quantity<dim::Dimension<>, long>{1});
+
+static_assert(func::is_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
+static_assert(func::is_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
+static_assert(func::is_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
+
+static_assert(func::is_not_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
+static_assert(func::is_not_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
+static_assert(func::is_not_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
+
+static_assert(Quantity<dim::Dimension<>, int>{1} == Quantity<dim::Dimension<>, long>{1});
+static_assert(Quantity<dim::Dimension<>, int>{1} != Quantity<dim::Dimension<>, long>{2});
 
 } // namespace rib::units
