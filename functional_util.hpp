@@ -39,6 +39,7 @@ DECLARE_COMPOUND_OPERATOR_FUNCTOR(compound_modulus, %=)
     constexpr bool is_##name##able_v = is_##name##able<T, U>::value;
 
 #define DECLARE_OPERATOR_ABLE_R_V(name, functor)                       \
+    DECLARE_OPERATOR_ABLE_V(name, functor)                             \
     template <class R, class T, class U>                               \
     struct is_##name##able_r : std::is_invocable_r<R, functor<>, T, U> \
     {                                                                  \
@@ -53,6 +54,10 @@ DECLARE_OPERATOR_ABLE_R_V(divides, std::divides)
 DECLARE_OPERATOR_ABLE_R_V(modulus, std::modulus)
 
 DECLARE_OPERATOR_ABLE_R_V(compound_plus, compound_plus)
+DECLARE_OPERATOR_ABLE_R_V(compound_minus, compound_minus)
+DECLARE_OPERATOR_ABLE_R_V(compound_multiplies, compound_multiplies)
+DECLARE_OPERATOR_ABLE_R_V(compound_divides, compound_divides)
+DECLARE_OPERATOR_ABLE_R_V(compound_modulus, compound_modulus)
 
 DECLARE_OPERATOR_ABLE_V(equal, std::equal_to)
 DECLARE_OPERATOR_ABLE_V(not_equal, std::not_equal_to)

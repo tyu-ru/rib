@@ -61,6 +61,19 @@ public:
         return val == rhs.val;
     }
 
+    template <class V>
+    constexpr Quantity& operator+=(const Quantity<DimensionType, V>& rhs)
+    {
+        val += rhs.val;
+        return *this;
+    }
+    template <class V>
+    constexpr Quantity& operator-=(const Quantity<DimensionType, V>& rhs)
+    {
+        val -= rhs.val;
+        return *this;
+    }
+
 private:
     ValueType val{};
 };
@@ -115,5 +128,16 @@ static_assert(func::is_not_equalable_v<Quantity<dim::Dimension<>, int>, Quantity
 
 static_assert(Quantity<dim::Dimension<>, int>{1} == Quantity<dim::Dimension<>, long>{1});
 static_assert(Quantity<dim::Dimension<>, int>{1} != Quantity<dim::Dimension<>, long>{2});
+
+static_assert(func::is_compound_plusable_r_v<Quantity<dim::Dimension<>>&, Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>>);
+static_assert(func::is_compound_plusable_r_v<Quantity<dim::Dimension<>, int>&, Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>>>);
+static_assert(func::is_compound_plusable_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<1>>> == false);
+
+static_assert(func::is_compound_minusable_r_v<Quantity<dim::Dimension<>>&, Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>>);
+static_assert(func::is_compound_minusable_r_v<Quantity<dim::Dimension<>, int>&, Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>>>);
+static_assert(func::is_compound_minusable_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<1>>> == false);
+
+static_assert((Quantity<dim::Dimension<>, int>{1} += Quantity<dim::Dimension<>, long>{2}).value() == 3);
+static_assert((Quantity<dim::Dimension<>, int>{1} -= Quantity<dim::Dimension<>, long>{2}).value() == -1);
 
 } // namespace rib::units
