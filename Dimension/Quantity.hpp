@@ -141,30 +141,38 @@ public:
 
     /// binary +
     template <class D, class V1, class V2>
-    friend constexpr Quantity<D, decltype(V1{} + V2{})> operator+(const Quantity<D, V1>& lhs, const Quantity<D, V2>& rhs);
+    friend constexpr auto operator+(const Quantity<D, V1>& lhs, const Quantity<D, V2>& rhs)
+        -> Quantity<D, decltype(V1{} + V2{})>;
     /// binary -
     template <class D, class V1, class V2>
-    friend constexpr Quantity<D, decltype(V1{} - V2{})> operator-(const Quantity<D, V1>& lhs, const Quantity<D, V2>& rhs);
+    friend constexpr auto operator-(const Quantity<D, V1>& lhs, const Quantity<D, V2>& rhs)
+        -> Quantity<D, decltype(V1{} - V2{})>;
 
     /// binary *
     template <class D1, class D2, class V1, class V2>
-    friend constexpr Quantity<dim::ProductDim_t<D1, D2>, decltype(V1{} * V2{})> operator*(const Quantity<D1, V1>& lhs, const Quantity<D2, V2>& rhs);
+    friend constexpr auto operator*(const Quantity<D1, V1>& lhs, const Quantity<D2, V2>& rhs)
+        -> Quantity<dim::ProductDim_t<D1, D2>, decltype(V1{} * V2{})>;
     /// binary * (Quantity * scalar)
     template <class D, class V1, class V2>
-    friend constexpr Quantity<D, decltype(V1{} * V2{})> operator*(const Quantity<D, V1>& lhs, const V2& rhs);
+    friend constexpr auto operator*(const Quantity<D, V1>& lhs, const V2& rhs)
+        -> Quantity<D, decltype(V1{} * V2{})>;
     /// binary * (scalar * Quantity)
     template <class D, class V1, class V2>
-    friend constexpr Quantity<D, decltype(V1{} * V2{})> operator*(const V1& lhs, const Quantity<D, V2>& rhs);
+    friend constexpr auto operator*(const V1& lhs, const Quantity<D, V2>& rhs)
+        -> Quantity<D, decltype(V1{} * V2{})>;
 
     /// binary /
     template <class D1, class D2, class V1, class V2>
-    friend constexpr Quantity<dim::QuotientDim_t<D1, D2>, decltype(V1{} / V2{})> operator/(const Quantity<D1, V1>& lhs, const Quantity<D2, V2>& rhs);
+    friend constexpr auto operator/(const Quantity<D1, V1>& lhs, const Quantity<D2, V2>& rhs)
+        -> Quantity<dim::QuotientDim_t<D1, D2>, decltype(V1{} / V2{})>;
     /// binary / (Quantity * scalar)
     template <class D, class V1, class V2>
-    friend constexpr Quantity<D, decltype(V1{} * V2{})> operator/(const Quantity<D, V1>& lhs, const V2& rhs);
+    friend constexpr auto operator/(const Quantity<D, V1>& lhs, const V2& rhs)
+        -> Quantity<D, decltype(V1{} * V2{})>;
     /// binary / (scalar * Quantity)
     template <class D, class V1, class V2>
-    friend constexpr Quantity<dim::ReciprocalDim_t<D>, decltype(V1{} * V2{})> operator/(const V1& lhs, const Quantity<D, V2>& rhs);
+    friend constexpr auto operator/(const V1& lhs, const Quantity<D, V2>& rhs)
+        -> Quantity<dim::ReciprocalDim_t<D>, decltype(V1{} * V2{})>;
 
 private:
     ValueType val{};
@@ -194,33 +202,39 @@ inline constexpr auto operator-(const Quantity<D, V1>& lhs, const Quantity<D, V2
 }
 
 template <class D1, class D2, class V1, class V2>
-inline constexpr Quantity<dim::ProductDim_t<D1, D2>, decltype(V1{} * V2{})> operator*(const Quantity<D1, V1>& lhs, const Quantity<D2, V2>& rhs)
+inline constexpr auto operator*(const Quantity<D1, V1>& lhs, const Quantity<D2, V2>& rhs)
+    -> Quantity<dim::ProductDim_t<D1, D2>, decltype(V1{} * V2{})>
 {
     return Quantity<dim::ProductDim_t<D1, D2>, decltype(V1{} * V2{})>{lhs.val * rhs.val};
 }
 template <class D, class V1, class V2>
-inline constexpr Quantity<D, decltype(V1{} * V2{})> operator*(const Quantity<D, V1>& lhs, const V2& rhs)
+inline constexpr auto operator*(const Quantity<D, V1>& lhs, const V2& rhs)
+    -> Quantity<D, decltype(V1{} * V2{})>
 {
     return Quantity<D, decltype(V1{} * V2{})>{lhs.val * rhs};
 }
 template <class D, class V1, class V2>
-inline constexpr Quantity<D, decltype(V1{} * V2{})> operator*(const V1& lhs, const Quantity<D, V2>& rhs)
+inline constexpr auto operator*(const V1& lhs, const Quantity<D, V2>& rhs)
+    -> Quantity<D, decltype(V1{} * V2{})>
 {
     return Quantity<D, decltype(V1{} * V2{})>{lhs * rhs.val};
 }
 
 template <class D1, class D2, class V1, class V2>
-inline constexpr Quantity<dim::QuotientDim_t<D1, D2>, decltype(V1{} / V2{})> operator/(const Quantity<D1, V1>& lhs, const Quantity<D2, V2>& rhs)
+inline constexpr auto operator/(const Quantity<D1, V1>& lhs, const Quantity<D2, V2>& rhs)
+    -> Quantity<dim::QuotientDim_t<D1, D2>, decltype(V1{} / V2{})>
 {
     return Quantity<dim::QuotientDim_t<D1, D2>, decltype(V1{} / V2{})>{lhs.val / rhs.val};
 }
 template <class D, class V1, class V2>
-inline constexpr Quantity<D, decltype(V1{} * V2{})> operator/(const Quantity<D, V1>& lhs, const V2& rhs)
+inline constexpr auto operator/(const Quantity<D, V1>& lhs, const V2& rhs)
+    -> Quantity<D, decltype(V1{} * V2{})>
 {
     return Quantity<D, decltype(V1{} * V2{})>{lhs.val / rhs};
 }
 template <class D, class V1, class V2>
-inline constexpr Quantity<dim::ReciprocalDim_t<D>, decltype(V1{} * V2{})> operator/(const V1& lhs, const Quantity<D, V2>& rhs)
+inline constexpr auto operator/(const V1& lhs, const Quantity<D, V2>& rhs)
+    -> Quantity<dim::ReciprocalDim_t<D>, decltype(V1{} * V2{})>
 {
     return Quantity<dim::ReciprocalDim_t<D>, decltype(V1{} * V2{})>{lhs / rhs.val};
 }
