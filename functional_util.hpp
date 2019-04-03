@@ -6,20 +6,24 @@
 namespace rib::func
 {
 
-#define DECLARE_COMPOUND_OPERATOR_FUNCTOR(name, op)                                                \
-    template <class T = void>                                                                      \
-    struct name                                                                                    \
-    {                                                                                              \
-        constexpr T& operator()(T& lhs, const T& rhs) const { return lhs op rhs; }                 \
-    };                                                                                             \
-    template <>                                                                                    \
-    struct name<void>                                                                              \
-    {                                                                                              \
-        template <class T, class U>                                                                \
-        constexpr auto operator()(T&& lhs, U&& rhs) const -> decltype(lhs op std::forward<U>(rhs)) \
-        {                                                                                          \
-            return lhs op std::forward<U>(rhs);                                                    \
-        }                                                                                          \
+#define DECLARE_COMPOUND_OPERATOR_FUNCTOR(name, op)         \
+    template <class T = void>                               \
+    struct name                                             \
+    {                                                       \
+        constexpr T& operator()(T& lhs, const T& rhs) const \
+        {                                                   \
+            return lhs op rhs;                              \
+        }                                                   \
+    };                                                      \
+    template <>                                             \
+    struct name<void>                                       \
+    {                                                       \
+        template <class T, class U>                         \
+        constexpr auto operator()(T&& lhs, U&& rhs) const   \
+            -> decltype(lhs op std::forward<U>(rhs))        \
+        {                                                   \
+            return lhs op std::forward<U>(rhs);             \
+        }                                                   \
     };
 
 DECLARE_COMPOUND_OPERATOR_FUNCTOR(compound_plus, +=)
