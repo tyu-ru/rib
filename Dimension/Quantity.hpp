@@ -5,6 +5,7 @@
 #include "../Operators.hpp"
 #include "../Type/TypeTraits.hpp"
 #include "../functional_util.hpp"
+#include "../Number/Algebra.hpp"
 
 namespace rib::units
 {
@@ -168,11 +169,11 @@ public:
     /// binary / (Quantity * scalar)
     template <class D, class V1, class V2>
     friend constexpr auto operator/(const Quantity<D, V1>& lhs, const V2& rhs)
-        -> Quantity<D, decltype(V1{} * V2{})>;
+        -> Quantity<D, decltype(V1{} / V2{})>;
     /// binary / (scalar * Quantity)
     template <class D, class V1, class V2>
     friend constexpr auto operator/(const V1& lhs, const Quantity<D, V2>& rhs)
-        -> Quantity<dim::ReciprocalDim_t<D>, decltype(V1{} * V2{})>;
+        -> Quantity<dim::ReciprocalDim_t<D>, decltype(V1{} / V2{})>;
 
 private:
     ValueType val{};
@@ -228,15 +229,15 @@ inline constexpr auto operator/(const Quantity<D1, V1>& lhs, const Quantity<D2, 
 }
 template <class D, class V1, class V2>
 inline constexpr auto operator/(const Quantity<D, V1>& lhs, const V2& rhs)
-    -> Quantity<D, decltype(V1{} * V2{})>
+    -> Quantity<D, decltype(V1{} / V2{})>
 {
-    return Quantity<D, decltype(V1{} * V2{})>{lhs.val / rhs};
+    return Quantity<D, decltype(V1{} / V2{})>{lhs.val / rhs};
 }
 template <class D, class V1, class V2>
 inline constexpr auto operator/(const V1& lhs, const Quantity<D, V2>& rhs)
-    -> Quantity<dim::ReciprocalDim_t<D>, decltype(V1{} * V2{})>
+    -> Quantity<dim::ReciprocalDim_t<D>, decltype(V1{} / V2{})>
 {
-    return Quantity<dim::ReciprocalDim_t<D>, decltype(V1{} * V2{})>{lhs / rhs.val};
+    return Quantity<dim::ReciprocalDim_t<D>, decltype(V1{} / V2{})>{lhs / rhs.val};
 }
 
 static_assert(std::is_default_constructible_v<Quantity<dim::Dimension<>, int>>);
@@ -321,28 +322,30 @@ static_assert((Quantity<dim::Dimension<>, int>{2} *= Quantity<dim::Dimension<>, 
 static_assert((Quantity<dim::Dimension<>, int>{6} /= 3).value() == 2);
 static_assert((Quantity<dim::Dimension<>, int>{6} /= Quantity<dim::Dimension<>, int>{3}).value() == 2);
 
-static_assert(func::is_plusable_r_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>>);
-static_assert(func::is_plusable_r_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>, int>>);
-static_assert(func::is_plusable_r_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>>>);
+static_assert(func::is_plusable_r_v<Quantity<dim::Dimension<>, decltype(number::Algebra0{} + number::Algebra1{})>,
+                                    Quantity<dim::Dimension<>, number::Algebra0>, Quantity<dim::Dimension<>, number::Algebra1>>);
 static_assert(func::is_plusable_v<Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<>>> == false);
 
-static_assert(func::is_minusable_r_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>>);
-static_assert(func::is_minusable_r_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>, int>>);
-static_assert(func::is_minusable_r_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>>>);
+static_assert(func::is_minusable_r_v<Quantity<dim::Dimension<>, decltype(number::Algebra0{} - number::Algebra1{})>,
+                                     Quantity<dim::Dimension<>, number::Algebra0>, Quantity<dim::Dimension<>, number::Algebra1>>);
 static_assert(func::is_minusable_v<Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<>>> == false);
 
 static_assert((Quantity<dim::Dimension<>, int>{1} + Quantity<dim::Dimension<>, int>{2}).value() == 3);
 static_assert((Quantity<dim::Dimension<>, int>{1} - Quantity<dim::Dimension<>, int>{2}).value() == -1);
 
-static_assert(func::is_multipliesable_r_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>>);
-static_assert(func::is_multipliesable_r_v<Quantity<dim::Dimension<3>>, Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<2>>>);
-static_assert(func::is_multipliesable_r_v<Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<1>, int>, double>);
-static_assert(func::is_multipliesable_r_v<Quantity<dim::Dimension<1>>, double, Quantity<dim::Dimension<1>, int>>);
+static_assert(func::is_multipliesable_r_v<Quantity<dim::Dimension<3>, decltype(number::Algebra0{} * number::Algebra1{})>,
+                                          Quantity<dim::Dimension<1>, number::Algebra0>, Quantity<dim::Dimension<2>, number::Algebra1>>);
+static_assert(func::is_multipliesable_r_v<Quantity<dim::Dimension<1>, decltype(number::Algebra0{} * number::Algebra1{})>,
+                                          Quantity<dim::Dimension<1>, number::Algebra0>, number::Algebra1>);
+static_assert(func::is_multipliesable_r_v<Quantity<dim::Dimension<1>, decltype(number::Algebra0{} * number::Algebra1{})>,
+                                          number::Algebra0, Quantity<dim::Dimension<1>, number::Algebra1>>);
 
-static_assert(func::is_dividesable_r_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>>);
-static_assert(func::is_dividesable_r_v<Quantity<dim::Dimension<-1>>, Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<2>>>);
-static_assert(func::is_dividesable_r_v<Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<1>, int>, double>);
-static_assert(func::is_dividesable_r_v<Quantity<dim::Dimension<-1>>, double, Quantity<dim::Dimension<1>, int>>);
+static_assert(func::is_dividesable_r_v<Quantity<dim::Dimension<-1>, decltype(number::Algebra0{} / number::Algebra1{})>,
+                                       Quantity<dim::Dimension<1>, number::Algebra0>, Quantity<dim::Dimension<2>, number::Algebra1>>);
+static_assert(func::is_dividesable_r_v<Quantity<dim::Dimension<1>, decltype(number::Algebra0{} / number::Algebra1{})>,
+                                       Quantity<dim::Dimension<1>, number::Algebra0>, number::Algebra1>);
+static_assert(func::is_dividesable_r_v<Quantity<dim::Dimension<-1>, decltype(number::Algebra0{} / number::Algebra1{})>,
+                                       number::Algebra0, Quantity<dim::Dimension<1>, number::Algebra1>>);
 
 static_assert((Quantity<dim::Dimension<>, int>{2} * Quantity<dim::Dimension<>, int>{3}).value() == 6);
 static_assert((Quantity<dim::Dimension<>, int>{2} * 3).value() == 6);
