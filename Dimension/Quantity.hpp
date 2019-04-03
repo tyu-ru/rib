@@ -9,6 +9,15 @@
 namespace rib::units
 {
 
+/**
+ * @brief Dimensioned quantity
+ * @details restricts operations other than those shown below@n
+ * add/sub : same dimension@n
+ * compound mul/div : dimensionless quantity or scalar@n
+ * mul/div : calculation result dimension is product/quotient dimensions(scalar is treated as dimensionless)
+ * @tparam Dimension dim::Dimension
+ * @tparam Value value type
+ */
 template <class Dimension, class Value = double>
 class Quantity : operators::LessThanComparable<Quantity<Dimension, Value>>,
                  operators::EqualityComparable<Quantity<Dimension, Value>>
@@ -23,21 +32,34 @@ public:
     using ValueType = Value;
 
 public:
+    /// default constructor (value is initialized by default)
     constexpr Quantity() = default;
-    explicit constexpr Quantity(const ValueType& other) : val(other) {}
+    /// copy constructor
     constexpr Quantity(const Quantity&) = default;
+    /// move constructor
     constexpr Quantity(Quantity&&) = default;
+    /// copy value
+    explicit constexpr Quantity(const ValueType& other) : val(other) {}
+    /// move value
+    explicit constexpr Quantity(ValueType&& other) : val(std::move(other)) {}
+    /// value constructor
+    template <class... Args>
+    explicit constexpr Quantity(std::in_place_t, Args&&... args) : val(std::forward<Args>(args)...) {}
+    /// destructor
     ~Quantity() = default;
 
+    /// copy assignment
     constexpr Quantity& operator=(const Quantity&) = default;
+    /// move assignment
     constexpr Quantity& operator=(Quantity&&) = default;
-
+    /// copy assignment(different ValueType)
     template <class V>
     constexpr Quantity& operator=(const Quantity<DimensionType, V>& rhs)
     {
         val = rhs.val;
         return *this;
     }
+    /// move assignment(different ValueType)
     template <class V>
     constexpr Quantity& operator=(Quantity<DimensionType, V>&& rhs)
     {
@@ -45,31 +67,35 @@ public:
         return *this;
     }
 
+    /// value accessor
     constexpr const ValueType& value() const& { return val; }
+    /// value accessor
     constexpr ValueType& value() & { return val; }
+    /// value accessor
     constexpr const ValueType&& value() const&& { return std::move(val); }
+    /// value accessor
     constexpr ValueType&& value() && { return std::move(val); }
 
+    /// less compare (other compare opetators(`>`, `<=`, `>=`) are defined by operators::LessThanComparable)
     template <class D, class V1, class V2>
     friend constexpr bool operator<(const Quantity<D, V1>& lhs, const Quantity<D, V2>& rhs);
+    /// equality compare (not equality operator`!=` is defined by operators::EqualityComparable)
     template <class D, class V1, class V2>
     friend constexpr bool operator==(const Quantity<D, V1>& lhs, const Quantity<D, V2>& rhs);
 
-    constexpr Quantity operator+() const
-    {
-        return *this;
-    }
-    constexpr Quantity operator-() const
-    {
-        return Quantity{-val};
-    }
+    /// unary +
+    constexpr Quantity operator+() const { return *this; }
+    /// unary -
+    constexpr Quantity operator-() const { return Quantity{-val}; }
 
+    /// compound +
     template <class V>
     constexpr Quantity& operator+=(const Quantity<DimensionType, V>& rhs)
     {
         val += rhs.val;
         return *this;
     }
+    /// compound -
     template <class V>
     constexpr Quantity& operator-=(const Quantity<DimensionType, V>& rhs)
     {
@@ -77,58 +103,73 @@ public:
         return *this;
     }
 
-    template <class V>
-    constexpr Quantity& operator*=(const Quantity<dim::Dimension<>, V>& rhs)
-    {
-        val *= rhs.val;
-        return *this;
-    }
-    template <class D, class V>
-    constexpr Quantity& operator*=(Quantity<D, V>) = delete;
+    /// compound * (scalar)
     template <class T>
     constexpr Quantity& operator*=(const T& rhs)
     {
         val *= rhs;
         return *this;
     }
-
+    /// compound * (dimensionless)
     template <class V>
-    constexpr Quantity& operator/=(const Quantity<dim::Dimension<>, V>& rhs)
+    constexpr Quantity& operator*=(const Quantity<dim::Dimension<>, V>& rhs)
     {
-        val /= rhs.val;
+        val *= rhs.val;
         return *this;
     }
+    /// [[deleted]] compound * (not same dimension)
     template <class D, class V>
-    constexpr Quantity& operator/=(Quantity<D, V>) = delete;
+    constexpr Quantity& operator*=(Quantity<D, V>) = delete;
+
+    /// compound / (scalar)
     template <class T>
     constexpr Quantity& operator/=(const T& rhs)
     {
         val /= rhs;
         return *this;
     }
+    /// compound / (dimensionless)
+    template <class V>
+    constexpr Quantity& operator/=(const Quantity<dim::Dimension<>, V>& rhs)
+    {
+        val /= rhs.val;
+        return *this;
+    }
+    /// [[deleted]] compound / (not same dimension)
+    template <class D, class V>
+    constexpr Quantity& operator/=(Quantity<D, V>) = delete;
 
+    /// binary +
     template <class D, class V1, class V2>
     friend constexpr Quantity<D, decltype(V1{} + V2{})> operator+(const Quantity<D, V1>& lhs, const Quantity<D, V2>& rhs);
+    /// binary -
     template <class D, class V1, class V2>
     friend constexpr Quantity<D, decltype(V1{} - V2{})> operator-(const Quantity<D, V1>& lhs, const Quantity<D, V2>& rhs);
 
+    /// binary *
     template <class D1, class D2, class V1, class V2>
     friend constexpr Quantity<dim::ProductDim_t<D1, D2>, decltype(V1{} * V2{})> operator*(const Quantity<D1, V1>& lhs, const Quantity<D2, V2>& rhs);
+    /// binary * (Quantity * scalar)
     template <class D, class V1, class V2>
     friend constexpr Quantity<D, decltype(V1{} * V2{})> operator*(const Quantity<D, V1>& lhs, const V2& rhs);
+    /// binary * (scalar * Quantity)
     template <class D, class V1, class V2>
     friend constexpr Quantity<D, decltype(V1{} * V2{})> operator*(const V1& lhs, const Quantity<D, V2>& rhs);
 
+    /// binary /
     template <class D1, class D2, class V1, class V2>
     friend constexpr Quantity<dim::QuotientDim_t<D1, D2>, decltype(V1{} / V2{})> operator/(const Quantity<D1, V1>& lhs, const Quantity<D2, V2>& rhs);
+    /// binary / (Quantity * scalar)
     template <class D, class V1, class V2>
     friend constexpr Quantity<D, decltype(V1{} * V2{})> operator/(const Quantity<D, V1>& lhs, const V2& rhs);
+    /// binary / (scalar * Quantity)
     template <class D, class V1, class V2>
     friend constexpr Quantity<dim::ReciprocalDim_t<D>, decltype(V1{} * V2{})> operator/(const V1& lhs, const Quantity<D, V2>& rhs);
 
 private:
     ValueType val{};
 };
+
 template <class D, class V1, class V2>
 inline constexpr bool operator<(const Quantity<D, V1>& lhs, const Quantity<D, V2>& rhs)
 {
@@ -193,6 +234,7 @@ static_assert(std::is_constructible_v<Quantity<dim::Dimension<>, int>, int&&>);
 static_assert(std::is_constructible_v<Quantity<dim::Dimension<>, double>, int>);
 static_assert(std::is_constructible_v<Quantity<dim::Dimension<>, double>, int&>);
 static_assert(std::is_constructible_v<Quantity<dim::Dimension<>, double>, int&&>);
+static_assert(std::is_constructible_v<Quantity<dim::Dimension<>, double>, std::in_place_t, int>);
 
 static_assert(std::is_copy_assignable_v<Quantity<dim::Dimension<>, int>>);
 static_assert(std::is_move_assignable_v<Quantity<dim::Dimension<>, int>>);
