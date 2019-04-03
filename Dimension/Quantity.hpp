@@ -112,6 +112,20 @@ public:
     template <class D, class V1, class V2>
     friend constexpr Quantity<D, decltype(V1{} - V2{})> operator-(const Quantity<D, V1>& lhs, const Quantity<D, V2>& rhs);
 
+    template <class D1, class D2, class V1, class V2>
+    friend constexpr Quantity<dim::ProductDim_t<D1, D2>, decltype(V1{} * V2{})> operator*(const Quantity<D1, V1>& lhs, const Quantity<D2, V2>& rhs);
+    template <class D, class V1, class V2>
+    friend constexpr Quantity<D, decltype(V1{} * V2{})> operator*(const Quantity<D, V1>& lhs, const V2& rhs);
+    template <class D, class V1, class V2>
+    friend constexpr Quantity<D, decltype(V1{} * V2{})> operator*(const V1& lhs, const Quantity<D, V2>& rhs);
+
+    template <class D1, class D2, class V1, class V2>
+    friend constexpr Quantity<dim::QuotientDim_t<D1, D2>, decltype(V1{} / V2{})> operator/(const Quantity<D1, V1>& lhs, const Quantity<D2, V2>& rhs);
+    template <class D, class V1, class V2>
+    friend constexpr Quantity<D, decltype(V1{} * V2{})> operator/(const Quantity<D, V1>& lhs, const V2& rhs);
+    template <class D, class V1, class V2>
+    friend constexpr Quantity<dim::ReciprocalDim_t<D>, decltype(V1{} * V2{})> operator/(const V1& lhs, const Quantity<D, V2>& rhs);
+
 private:
     ValueType val{};
 };
@@ -136,6 +150,38 @@ inline constexpr auto operator-(const Quantity<D, V1>& lhs, const Quantity<D, V2
     -> Quantity<D, decltype(V1{} - V2{})>
 {
     return Quantity<D, decltype(V1{} - V2{})>{lhs.val - rhs.val};
+}
+
+template <class D1, class D2, class V1, class V2>
+inline constexpr Quantity<dim::ProductDim_t<D1, D2>, decltype(V1{} * V2{})> operator*(const Quantity<D1, V1>& lhs, const Quantity<D2, V2>& rhs)
+{
+    return Quantity<dim::ProductDim_t<D1, D2>, decltype(V1{} * V2{})>{lhs.val * rhs.val};
+}
+template <class D, class V1, class V2>
+inline constexpr Quantity<D, decltype(V1{} * V2{})> operator*(const Quantity<D, V1>& lhs, const V2& rhs)
+{
+    return Quantity<D, decltype(V1{} * V2{})>{lhs.val * rhs};
+}
+template <class D, class V1, class V2>
+inline constexpr Quantity<D, decltype(V1{} * V2{})> operator*(const V1& lhs, const Quantity<D, V2>& rhs)
+{
+    return Quantity<D, decltype(V1{} * V2{})>{lhs * rhs.val};
+}
+
+template <class D1, class D2, class V1, class V2>
+inline constexpr Quantity<dim::QuotientDim_t<D1, D2>, decltype(V1{} / V2{})> operator/(const Quantity<D1, V1>& lhs, const Quantity<D2, V2>& rhs)
+{
+    return Quantity<dim::QuotientDim_t<D1, D2>, decltype(V1{} / V2{})>{lhs.val / rhs.val};
+}
+template <class D, class V1, class V2>
+inline constexpr Quantity<D, decltype(V1{} * V2{})> operator/(const Quantity<D, V1>& lhs, const V2& rhs)
+{
+    return Quantity<D, decltype(V1{} * V2{})>{lhs.val / rhs};
+}
+template <class D, class V1, class V2>
+inline constexpr Quantity<dim::ReciprocalDim_t<D>, decltype(V1{} * V2{})> operator/(const V1& lhs, const Quantity<D, V2>& rhs)
+{
+    return Quantity<dim::ReciprocalDim_t<D>, decltype(V1{} * V2{})>{lhs / rhs.val};
 }
 
 static_assert(std::is_default_constructible_v<Quantity<dim::Dimension<>, int>>);
@@ -231,5 +277,22 @@ static_assert(func::is_minusable_v<Quantity<dim::Dimension<1>>, Quantity<dim::Di
 
 static_assert((Quantity<dim::Dimension<>, int>{1} + Quantity<dim::Dimension<>, int>{2}).value() == 3);
 static_assert((Quantity<dim::Dimension<>, int>{1} - Quantity<dim::Dimension<>, int>{2}).value() == -1);
+
+static_assert(func::is_multipliesable_r_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>>);
+static_assert(func::is_multipliesable_r_v<Quantity<dim::Dimension<3>>, Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<2>>>);
+static_assert(func::is_multipliesable_r_v<Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<1>, int>, double>);
+static_assert(func::is_multipliesable_r_v<Quantity<dim::Dimension<1>>, double, Quantity<dim::Dimension<1>, int>>);
+
+static_assert(func::is_dividesable_r_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>>);
+static_assert(func::is_dividesable_r_v<Quantity<dim::Dimension<-1>>, Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<2>>>);
+static_assert(func::is_dividesable_r_v<Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<1>, int>, double>);
+static_assert(func::is_dividesable_r_v<Quantity<dim::Dimension<-1>>, double, Quantity<dim::Dimension<1>, int>>);
+
+static_assert((Quantity<dim::Dimension<>, int>{2} * Quantity<dim::Dimension<>, int>{3}).value() == 6);
+static_assert((Quantity<dim::Dimension<>, int>{2} * 3).value() == 6);
+static_assert((3 * Quantity<dim::Dimension<>, int>{2}).value() == 6);
+static_assert((Quantity<dim::Dimension<>, int>{6} / Quantity<dim::Dimension<>, int>{3}).value() == 2);
+static_assert((Quantity<dim::Dimension<>, int>{6} / 3).value() == 2);
+static_assert((6 / Quantity<dim::Dimension<>, int>{3}).value() == 2);
 
 } // namespace rib::units
