@@ -55,6 +55,15 @@ public:
     template <class D, class V1, class V2>
     friend constexpr bool operator==(const Quantity<D, V1>& lhs, const Quantity<D, V2>& rhs);
 
+    constexpr Quantity operator+() const
+    {
+        return *this;
+    }
+    constexpr Quantity operator-() const
+    {
+        return Quantity{-val};
+    }
+
     template <class V>
     constexpr Quantity& operator+=(const Quantity<DimensionType, V>& rhs)
     {
@@ -145,6 +154,12 @@ static_assert(std::is_assignable_v<Quantity<dim::Dimension<>, int>&, Quantity<di
 
 static_assert(std::is_assignable_v<Quantity<dim::Dimension<>, int>&, Quantity<dim::Dimension<1>, int>> == false);
 static_assert(std::is_assignable_v<Quantity<dim::Dimension<>, int>&, int> == false);
+
+static_assert(func::is_unary_plusable_r_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>>);
+static_assert(func::is_negateable_r_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>>);
+
+static_assert((+Quantity<dim::Dimension<>, int>{1}).value() == 1);
+static_assert((-Quantity<dim::Dimension<>, int>{1}).value() == -1);
 
 static_assert(func::is_lessable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
 static_assert(func::is_lessable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
