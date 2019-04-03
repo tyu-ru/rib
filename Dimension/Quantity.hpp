@@ -50,16 +50,10 @@ public:
     constexpr const ValueType&& value() const&& { return std::move(val); }
     constexpr ValueType&& value() && { return std::move(val); }
 
-    template <class V>
-    constexpr bool operator<(const Quantity<DimensionType, V>& rhs) const
-    {
-        return val < rhs.val;
-    }
-    template <class V>
-    constexpr bool operator==(const Quantity<DimensionType, V>& rhs) const
-    {
-        return val == rhs.val;
-    }
+    template <class D, class V1, class V2>
+    friend constexpr bool operator<(const Quantity<D, V1>& lhs, const Quantity<D, V2>& rhs);
+    template <class D, class V1, class V2>
+    friend constexpr bool operator==(const Quantity<D, V1>& lhs, const Quantity<D, V2>& rhs);
 
     template <class V>
     constexpr Quantity& operator+=(const Quantity<DimensionType, V>& rhs)
@@ -112,7 +106,16 @@ public:
 private:
     ValueType val{};
 };
-
+template <class D, class V1, class V2>
+inline constexpr bool operator<(const Quantity<D, V1>& lhs, const Quantity<D, V2>& rhs)
+{
+    return lhs.val < rhs.val;
+}
+template <class D, class V1, class V2>
+inline constexpr bool operator==(const Quantity<D, V1>& lhs, const Quantity<D, V2>& rhs)
+{
+    return lhs.val == rhs.val;
+}
 template <class D, class V1, class V2>
 inline constexpr auto operator+(const Quantity<D, V1>& lhs, const Quantity<D, V2>& rhs)
     -> Quantity<D, decltype(V1{} + V2{})>
