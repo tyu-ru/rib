@@ -29,7 +29,9 @@ class Quantity : operators::LessThanComparable<Quantity<Dimension, Value>>,
     friend class Quantity;
 
 public:
+    /// Dimension Type
     using DimensionType = Dimension;
+    /// Value Type
     using ValueType = Value;
 
 public:
