@@ -1,7 +1,7 @@
 #pragma once
 
 #include <utility>
-#include "Dimension.hpp"
+#include "Dimension/Dimension.hpp"
 #include "../Operators.hpp"
 #include "../Type/TypeTraits.hpp"
 #include "../functional_util.hpp"
