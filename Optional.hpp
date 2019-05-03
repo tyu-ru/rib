@@ -5,6 +5,7 @@
 #include <functional>
 
 #include "Type/TypeTraits.hpp"
+#include "functional_util.hpp"
 
 namespace rib
 {
@@ -179,25 +180,29 @@ static_assert(std::is_default_constructible_v<Optional<int>>);
 static_assert(std::is_constructible_v<Optional<int>, int>);
 static_assert(std::is_constructible_v<Optional<int>, std::nullopt_t>);
 
-static_assert(std::is_same_v<decltype(std::declval<Optional<int>>().unwrap()), Optional<int>>);
-static_assert(std::is_same_v<decltype(std::declval<Optional<Optional<int>>>().unwrap()), Optional<int>>);
+static_assert(std::is_same_v<RESULT_T(Optional<int>, unwrap()),
+                             Optional<int>>);
+static_assert(std::is_same_v<RESULT_T(Optional<Optional<int>>, unwrap()),
+                             Optional<int>>);
 
-static_assert(std::is_same_v<decltype(std::declval<Optional<int>>().invoke(std::declval<long(int)>())),
+static_assert(std::is_same_v<RESULT_T(Optional<int>, invoke(DECLV(long(int)))),
                              Optional<long>>);
-static_assert(std::is_same_v<decltype(std::declval<Optional<int>>().invoke(std::declval<Optional<long>(int)>())),
+static_assert(std::is_same_v<RESULT_T(Optional<int>, invoke(DECLV(Optional<long>(int)))),
                              Optional<long>>);
-static_assert(std::is_same_v<decltype(std::declval<Optional<int>>().invoke(std::declval<std::optional<long>(int)>())),
-                             Optional<long>>);
-
-static_assert(std::is_same_v<decltype(std::declval<Optional<int>>() | std::declval<long(int)>()),
-                             Optional<long>>);
-static_assert(std::is_same_v<decltype(std::declval<Optional<int>>() | std::declval<Optional<long>(int)>()),
-                             Optional<long>>);
-static_assert(std::is_same_v<decltype(std::declval<Optional<int>>() | std::declval<std::optional<long>(int)>()),
+static_assert(std::is_same_v<RESULT_T(Optional<int>, invoke(DECLV(std::optional<long>(int)))),
                              Optional<long>>);
 
-static_assert(std::is_same_v<decltype(*std::declval<OptionalIterator<int>>()), int&>);
-static_assert(std::is_same_v<decltype(*std::declval<OptionalIterator<const int>>()), const int&>);
+static_assert(type::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, long(int)>);
+static_assert(type::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, Optional<long>(int)>);
+static_assert(type::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, std::optional<long>(int)>);
+
+static_assert(std::is_same_v<RESULT_T(Optional<int>, begin()),
+                             OptionalIterator<int>>);
+static_assert(std::is_same_v<RESULT_T(const Optional<int>, begin()),
+                             OptionalIterator<const int>>);
+
+static_assert(std::is_same_v<decltype(*DECLV(OptionalIterator<int>)), int&>);
+static_assert(std::is_same_v<decltype(*DECLV(OptionalIterator<const int>)), const int&>);
 
 static_assert([] {
     int a = 0;

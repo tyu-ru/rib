@@ -11,13 +11,25 @@ struct unary_plus
 {
     constexpr T operator()(const T& x) const { return +x; }
 };
-
 template <>
 struct unary_plus<void>
 {
     template <class T>
     constexpr auto operator()(T&& t) const
         -> decltype(+std::forward<T>(t)) { return *std::forward<T>(t); }
+};
+
+template <typename T = void>
+struct dereference
+{
+    constexpr T operator()(const T& x) const { return *x; }
+};
+template <>
+struct dereference<void>
+{
+    template <class T>
+    constexpr auto operator()(T&& t) const
+        -> decltype(*std::forward<T>(t)) { return *std::forward<T>(t); }
 };
 
 #define DECLARE_COMPOUND_OPERATOR_FUNCTOR(name, op)         \
@@ -64,6 +76,7 @@ DECLARE_COMPOUND_OPERATOR_FUNCTOR(compound_modulus, %=)
 
 DECLARE_UNARY_OPERATOR_ABLE(unary_plus, unary_plus)
 DECLARE_UNARY_OPERATOR_ABLE(negate, std::negate)
+DECLARE_UNARY_OPERATOR_ABLE(dereference, dereference)
 
 #undef DECLARE_UNARY_OPERATOR_ABLE
 
