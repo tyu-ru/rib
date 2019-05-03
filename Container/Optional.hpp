@@ -4,8 +4,8 @@
 #include <type_traits>
 #include <functional>
 
-#include "Type/TypeTraits.hpp"
-#include "functional_util.hpp"
+#include "../Type/TypeTraits.hpp"
+#include "../functional_util.hpp"
 
 namespace rib
 {
