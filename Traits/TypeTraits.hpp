@@ -3,7 +3,7 @@
 #include <type_traits>
 
 /// type utility
-namespace rib::traits
+namespace rib::trait
 {
 
 /**
@@ -90,4 +90,11 @@ static_assert(std::is_same_v<copy_const_t<const int, long>, const long>);
 static_assert(std::is_same_v<copy_const_t<int, const long>, long>);
 static_assert(std::is_same_v<copy_const_t<const int, const long>, const long>);
 
-} // namespace rib::traits
+/**
+ * @brief concept_t
+ * for SFINAE
+ */
+template <bool f>
+using concept_t = std::enable_if_t<f, std::nullptr_t>;
+
+} // namespace rib::trait

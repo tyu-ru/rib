@@ -4,6 +4,9 @@
 #include <optional>
 #include <functional>
 
+#include "../Traits/TypeTraits.hpp"
+#include "../Traits/FuncTraits.hpp"
+
 namespace rib
 {
 
@@ -78,20 +81,20 @@ public:
     constexpr Expected(Expected && other) noexcept(std::is_nothrow_move_constructible_v<decltype(payload)>) = default;
 
     /// construct by ok value
-    template <class... Args, std::enable_if_t<std::is_constructible_v<T, Args&&...>, std::nullptr_t> = nullptr>
+    template <class... Args, trait::concept_t<std::is_constructible_v<T, Args&&...>> = nullptr>
     constexpr Expected(Args && ... args) noexcept(std::is_nothrow_constructible_v<T, Args&&...>)
         : payload(std::in_place_type<Ok>, std::forward<Args>(args)...) {}
 
     /// construct by err value
-    template <class F, std::enable_if_t<std::is_constructible_v<E, F>, std::nullptr_t> = nullptr>
+    template <class F, trait::concept_t<std::is_constructible_v<E, F>> = nullptr>
     constexpr Expected(const Unexpected<F>& err) noexcept(std::is_nothrow_constructible_v<E, F>)
         : payload(std::in_place_type<Err>, err.value()) {}
     /// construct by err value
-    template <class F, std::enable_if_t<std::is_constructible_v<E, F>, std::nullptr_t> = nullptr>
+    template <class F, trait::concept_t<std::is_constructible_v<E, F>> = nullptr>
     constexpr Expected(Unexpected<F> && err) noexcept(std::is_nothrow_constructible_v<E, F&&>)
         : payload(std::in_place_type<Err>, std::move(err.value())) {}
     /// construct by err value
-    template <class... Args, std::enable_if_t<std::is_constructible_v<E, Args&&...>, std::nullptr_t> = nullptr>
+    template <class... Args, trait::concept_t<std::is_constructible_v<E, Args&&...>> = nullptr>
     constexpr Expected(Unexpect_tag, Args && ... args) noexcept(std::is_nothrow_constructible_v<E, Args&&...>)
         : payload(std::in_place_type<Err>, std::forward<Args>(args)...) {}
 
@@ -142,7 +145,7 @@ public:
     }
 
     /// if `* this` has value returns contained value, otherwise returns default construction
-    template <class U = T, std::enable_if_t<std::is_same_v<T, U> && (std::is_default_constructible_v<T> || std::is_aggregate_v<T>), std::nullptr_t> = nullptr>
+    template <class U = T, trait::concept_t<std::is_same_v<T, U> && (std::is_default_constructible_v<T> || std::is_aggregate_v<T>)> = nullptr>
     constexpr T value_or_default() const&
     {
         if (valid()) return **this;
@@ -153,7 +156,7 @@ public:
         }
     }
     /// if `* this` has value returns contained value, otherwise returns default construction
-    template <class U = T, std::enable_if_t<std::is_same_v<T, U> && (std::is_default_constructible_v<T> || std::is_aggregate_v<T>), std::nullptr_t> = nullptr>
+    template <class U = T, trait::concept_t<std::is_same_v<T, U> && (std::is_default_constructible_v<T> || std::is_aggregate_v<T>)> = nullptr>
     constexpr T value_or_default()&&
     {
         if (valid()) return std::move(**this);
@@ -303,34 +306,22 @@ public:
      * @return Expected<decltype(f(value())), E>
      */
     template <class F>
-    constexpr auto map(F f) const&->Expected<std::invoke_result_t<F, T>, E>
+    constexpr auto map(F && f) const&->Expected<std::invoke_result_t<F, T>, E>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
-        if constexpr (std::is_member_pointer_v<F>) {
-            return std::invoke(f, **this);
-        } else {
-            return f(**this);
-        }
+        return trait::invoke_constexpr(std::forward<F>(f), **this);
     }
     template <class F>
-    constexpr auto map(F f)&->Expected<std::invoke_result_t<F, T>, E>
+    constexpr auto map(F && f)&->Expected<std::invoke_result_t<F, T>, E>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
-        if constexpr (std::is_member_pointer_v<F>) {
-            return std::invoke(f, **this);
-        } else {
-            return f(**this);
-        }
+        return trait::invoke_constexpr(std::forward<F>(f), **this);
     }
     template <class F>
-    constexpr auto map(F f)&&->Expected<std::invoke_result_t<F, T>, E>
+    constexpr auto map(F && f)&&->Expected<std::invoke_result_t<F, T>, E>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
-        if constexpr (std::is_member_pointer_v<F>) {
-            return std::invoke(f, std::move(**this));
-        } else {
-            return f(std::move(**this));
-        }
+        return trait::invoke_constexpr(std::forward<F>(f), std::move(**this));
     }
 
     /**
@@ -338,125 +329,77 @@ public:
      * @param f invoke(f, value()) -> Expected<U, E>
      * @return decltype(f(value()))
      */
-    template <class F, std::enable_if_t<is_same_error_expected<std::invoke_result_t<F, T>>::value, std::nullptr_t> = nullptr>
-    constexpr auto bind(F f) const&->std::invoke_result_t<F, T>
+    template <class F, trait::concept_t<is_same_error_expected<std::invoke_result_t<F, T>>::value> = nullptr>
+    constexpr auto bind(F && f) const&->std::invoke_result_t<F, T>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
-        if constexpr (std::is_member_pointer_v<F>) {
-            return std::invoke(f, **this);
-        } else {
-            return f(**this);
-        }
+        return trait::invoke_constexpr(std::forward<F>(f), **this);
     }
-    template <class F, std::enable_if_t<is_same_error_expected<std::invoke_result_t<F, T>>::value, std::nullptr_t> = nullptr>
-    constexpr auto bind(F f)&->std::invoke_result_t<F, T>
+    template <class F, trait::concept_t<is_same_error_expected<std::invoke_result_t<F, T>>::value> = nullptr>
+    constexpr auto bind(F && f)&->std::invoke_result_t<F, T>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
-        if constexpr (std::is_member_pointer_v<F>) {
-            return std::invoke(f, **this);
-        } else {
-            return f(**this);
-        }
+        return trait::invoke_constexpr(std::forward<F>(f), **this);
     }
-    template <class F, std::enable_if_t<is_same_error_expected<std::invoke_result_t<F, T>>::value, std::nullptr_t> = nullptr>
-    constexpr auto bind(F f)&&->std::invoke_result_t<F, T>
+    template <class F, trait::concept_t<is_same_error_expected<std::invoke_result_t<F, T>>::value> = nullptr>
+    constexpr auto bind(F && f)&&->std::invoke_result_t<F, T>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
-        if constexpr (std::is_member_pointer_v<F>) {
-            return std::invoke(f, std::move(**this));
-        } else {
-            return f(std::move(**this));
-        }
+        return trait::invoke_constexpr(std::forward<F>(f), std::move(**this));
     }
 
     template <class F>
-    constexpr auto then(F f) const&->typename Expected<std::invoke_result_t<F, Expected>, E>::Unwrap_t
+    constexpr auto then(F && f) const&->typename Expected<std::invoke_result_t<F, Expected>, E>::Unwrap_t
     {
-        if constexpr (std::is_member_pointer_v<F>) {
-            return std::invoke(f, *this);
-        } else {
-            return f(*this);
-        }
+        return trait::invoke_constexpr(std::forward<F>(f), *this);
     }
     template <class F>
-    constexpr auto then(F f)&->typename Expected<std::invoke_result_t<F, Expected>, E>::Unwrap_t
+    constexpr auto then(F && f)&->typename Expected<std::invoke_result_t<F, Expected>, E>::Unwrap_t
     {
-        if constexpr (std::is_member_pointer_v<F>) {
-            return std::invoke(f, *this);
-        } else {
-            return f(*this);
-        }
+        return trait::invoke_constexpr(std::forward<F>(f), *this);
     }
     template <class F>
-    constexpr auto then(F f)&&->typename Expected<std::invoke_result_t<F, Expected>, E>::Unwrap_t
+    constexpr auto then(F && f)&&->typename Expected<std::invoke_result_t<F, Expected>, E>::Unwrap_t
     {
-        if constexpr (std::is_member_pointer_v<F>) {
-            return std::invoke(f, std::move(*this));
-        } else {
-            return f(std::move(*this));
-        }
+        return trait::invoke_constexpr(std::forward<F>(f), std::move(*this));
     }
 
     template <class F>
-    constexpr Expected catch_error(F f) const&
+    constexpr Expected catch_error(F && f) const&
     {
         if (valid()) return *this;
-        if constexpr (std::is_member_pointer_v<F>) {
-            return std::invoke(f, error());
-        } else {
-            return f(error());
-        }
+        return trait::invoke_constexpr(std::forward<F>(f), error_noexcept());
     }
     template <class F>
-    constexpr Expected catch_error(F f)&
+    constexpr Expected catch_error(F && f)&
     {
         if (valid()) return *this;
-        if constexpr (std::is_member_pointer_v<F>) {
-            return std::invoke(f, error());
-        } else {
-            return f(error());
-        }
+        return trait::invoke_constexpr(std::forward<F>(f), error_noexcept());
     }
     template <class F>
-    constexpr Expected catch_error(F f)&&
+    constexpr Expected catch_error(F && f)&&
     {
         if (valid()) return std::move(*this);
-        if constexpr (std::is_member_pointer_v<F>) {
-            return std::invoke(f, std::move(error()));
-        } else {
-            return f(std::move(error()));
-        }
+        return trait::invoke_constexpr(std::forward<F>(f), std::move(error_noexcept()));
     }
 
     template <class F>
-    constexpr auto emap(F f) const&->Expected<T, std::invoke_result_t<F, E>>
+    constexpr auto emap(F && f) const&->Expected<T, std::invoke_result_t<F, E>>
     {
         if (valid()) return **this;
-        if constexpr (std::is_member_pointer_v<F>) {
-            return {unexpect_tag_v, std::invoke(f, error())};
-        } else {
-            return {unexpect_tag_v, f(error())};
-        }
+        return {unexpect_tag_v, trait::invoke_constexpr(std::forward<F>(f), error())};
     }
     template <class F>
-    constexpr auto emap(F f)&->Expected<T, std::invoke_result_t<F, E>>
+    constexpr auto emap(F && f)&->Expected<T, std::invoke_result_t<F, E>>
     {
         if (valid()) return **this;
-        if constexpr (std::is_member_pointer_v<F>) {
-            return {unexpect_tag_v, std::invoke(f, error())};
-        } else {
-            return {unexpect_tag_v, f(error())};
-        }
+        return {unexpect_tag_v, trait::invoke_constexpr(std::forward<F>(f), error())};
     }
     template <class F>
-    constexpr auto emap(F f)&&->Expected<T, std::invoke_result_t<F, E>>
+    constexpr auto emap(F && f)&&->Expected<T, std::invoke_result_t<F, E>>
     {
         if (valid()) return std::move(**this);
-        if constexpr (std::is_member_pointer_v<F>) {
-            return {unexpect_tag_v, std::invoke(f, std::move(error()))};
-        } else {
-            return {unexpect_tag_v, f(std::move(error()))};
-        }
+        return {unexpect_tag_v, trait::invoke_constexpr(std::forward<F>(f), std::move(error()))};
     }
 };
 

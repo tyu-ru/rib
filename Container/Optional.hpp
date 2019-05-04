@@ -16,7 +16,7 @@ class OptionalIterator;
 template <class T>
 class Optional : public std::optional<T>
 {
-    static constexpr bool is_nested = traits::is_template_specialized_by_type_v<Optional, T>;
+    static constexpr bool is_nested = trait::is_template_specialized_by_type_v<Optional, T>;
 
     template <class U>
     struct deepest
@@ -38,7 +38,7 @@ class Optional : public std::optional<T>
     using deepest_t = typename deepest<U>::type;
 
 public:
-    template <class... Args, std::enable_if_t<std::is_constructible_v<std::optional<T>, Args...>, std::nullptr_t> = nullptr>
+    template <class... Args, trait::concept_t<std::is_constructible_v<std::optional<T>, Args...>> = nullptr>
     constexpr Optional(Args&&... args) : std::optional<T>(std::forward<Args>(args)...)
     {
     }
@@ -56,7 +56,7 @@ public:
     constexpr const Optional<T>& visit(F&& f, Args&&... args) const&
     {
         if (this->has_value()) {
-            traits::invoke_constexpr(std::forward<F>(f), **this, std::forward<Args>(args)...);
+            trait::invoke_constexpr(std::forward<F>(f), **this, std::forward<Args>(args)...);
         }
         return *this;
     }
@@ -64,7 +64,7 @@ public:
     constexpr Optional<T>& visit(F&& f, Args&&... args) &
     {
         if (this->has_value()) {
-            traits::invoke_constexpr(std::forward<F>(f), **this, std::forward<Args>(args)...);
+            trait::invoke_constexpr(std::forward<F>(f), **this, std::forward<Args>(args)...);
         }
         return *this;
     }
@@ -72,7 +72,7 @@ public:
     constexpr Optional<T> visit(F&& f, Args&&... args) &&
     {
         if (this->has_value()) {
-            traits::invoke_constexpr(std::forward<F>(f), **this, std::forward<Args>(args)...);
+            trait::invoke_constexpr(std::forward<F>(f), **this, std::forward<Args>(args)...);
         }
         return std::move(*this);
     }
@@ -81,7 +81,7 @@ public:
     constexpr auto map(F&& f, Args&&... args) const& -> Optional<deepest_t<std::invoke_result_t<F, T, Args...>>>
     {
         if (this->has_value()) {
-            return traits::invoke_constexpr(std::forward<F>(f), **this, std::forward<Args>(args)...);
+            return trait::invoke_constexpr(std::forward<F>(f), **this, std::forward<Args>(args)...);
         }
         return std::nullopt;
     }
@@ -89,7 +89,7 @@ public:
     constexpr auto map(F&& f, Args&&... args) & -> Optional<deepest_t<std::invoke_result_t<F, T, Args...>>>
     {
         if (this->has_value()) {
-            return traits::invoke_constexpr(std::forward<F>(f), **this, std::forward<Args>(args)...);
+            return trait::invoke_constexpr(std::forward<F>(f), **this, std::forward<Args>(args)...);
         }
         return std::nullopt;
     }
@@ -97,7 +97,7 @@ public:
     constexpr auto map(F&& f, Args&&... args) && -> Optional<deepest_t<std::invoke_result_t<F, T, Args...>>>
     {
         if (this->has_value()) {
-            return traits::invoke_constexpr(std::forward<F>(f), std::move(**this), std::forward<Args>(args)...);
+            return trait::invoke_constexpr(std::forward<F>(f), std::move(**this), std::forward<Args>(args)...);
         }
         return std::nullopt;
     }
@@ -136,7 +136,7 @@ public:
     using iterator_category = std::forward_iterator_tag;
 
 private:
-    using Optional_type = traits::copy_const_t<T, Optional<std::remove_const_t<T>>>;
+    using Optional_type = trait::copy_const_t<T, Optional<std::remove_const_t<T>>>;
     friend std::remove_const_t<Optional_type>;
 
     Optional_type* ptr = nullptr;
@@ -195,9 +195,9 @@ static_assert([] {
            Optional<int>().map(lmd) == std::nullopt;
 }());
 
-static_assert(traits::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, long(int)>);
-static_assert(traits::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, Optional<long>(int)>);
-static_assert(traits::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, std::optional<long>(int)>);
+static_assert(trait::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, long(int)>);
+static_assert(trait::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, Optional<long>(int)>);
+static_assert(trait::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, std::optional<long>(int)>);
 
 static_assert(std::is_same_v<decltype(std::declval<Optional<int>>().begin()),
                              OptionalIterator<int>>);

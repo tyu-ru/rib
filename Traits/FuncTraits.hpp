@@ -3,7 +3,7 @@
 #include <functional>
 #include <type_traits>
 
-namespace rib::traits
+namespace rib::trait
 {
 
 template <typename T = void>
@@ -181,4 +181,5 @@ inline constexpr std::invoke_result_t<F, Args...> invoke_constexpr(F&& f, Args&&
         return f(std::forward<Args>(args)...);
     }
 }
-} // namespace rib::traits
+
+} // namespace rib::trait

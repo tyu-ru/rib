@@ -3,8 +3,8 @@
 #include <utility>
 #include "Dimension/Dimension.hpp"
 #include "../Operators.hpp"
-#include "../Type/TypeTraits.hpp"
-#include "../functional_util.hpp"
+#include "../Traits/TypeTraits.hpp"
+#include "../Traits/FuncTraits.hpp"
 #include "../Number/Algebra.hpp"
 
 namespace rib::units
@@ -23,7 +23,7 @@ template <class Dimension, class Value = double>
 class Quantity : operators::LessThanComparable<Quantity<Dimension, Value>>,
                  operators::EqualityComparable<Quantity<Dimension, Value>>
 {
-    static_assert(type::is_template_specialized_by_value_v<dim::Dimension, Dimension>);
+    static_assert(trait::is_template_specialized_by_value_v<dim::Dimension, Dimension>);
 
     template <class D, class V>
     friend class Quantity;
@@ -260,27 +260,27 @@ static_assert(std::is_assignable_v<Quantity<dim::Dimension<>, int>&, Quantity<di
 static_assert(std::is_assignable_v<Quantity<dim::Dimension<>, int>&, Quantity<dim::Dimension<1>, int>> == false);
 static_assert(std::is_assignable_v<Quantity<dim::Dimension<>, int>&, int> == false);
 
-static_assert(func::is_unary_plusable_r_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>>);
-static_assert(func::is_negateable_r_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>>);
+static_assert(trait::is_unary_plusable_r_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>>);
+static_assert(trait::is_negateable_r_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>>);
 
 static_assert((+Quantity<dim::Dimension<>, int>{1}).value() == 1);
 static_assert((-Quantity<dim::Dimension<>, int>{1}).value() == -1);
 
-static_assert(func::is_lessable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
-static_assert(func::is_lessable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
-static_assert(func::is_lessable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
+static_assert(trait::is_lessable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
+static_assert(trait::is_lessable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
+static_assert(trait::is_lessable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
 
-static_assert(func::is_less_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
-static_assert(func::is_less_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
-static_assert(func::is_less_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
+static_assert(trait::is_less_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
+static_assert(trait::is_less_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
+static_assert(trait::is_less_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
 
-static_assert(func::is_greaterable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
-static_assert(func::is_greaterable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
-static_assert(func::is_greaterable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
+static_assert(trait::is_greaterable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
+static_assert(trait::is_greaterable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
+static_assert(trait::is_greaterable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
 
-static_assert(func::is_greater_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
-static_assert(func::is_greater_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
-static_assert(func::is_greater_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
+static_assert(trait::is_greater_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
+static_assert(trait::is_greater_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
+static_assert(trait::is_greater_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
 
 static_assert(Quantity<dim::Dimension<>, int>{1} < Quantity<dim::Dimension<>, long>{2});
 static_assert(Quantity<dim::Dimension<>, int>{2} > Quantity<dim::Dimension<>, long>{1});
@@ -289,65 +289,65 @@ static_assert(Quantity<dim::Dimension<>, int>{1} <= Quantity<dim::Dimension<>, l
 static_assert(Quantity<dim::Dimension<>, int>{1} >= Quantity<dim::Dimension<>, long>{1});
 static_assert(Quantity<dim::Dimension<>, int>{2} >= Quantity<dim::Dimension<>, long>{1});
 
-static_assert(func::is_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
-static_assert(func::is_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
-static_assert(func::is_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
+static_assert(trait::is_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
+static_assert(trait::is_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
+static_assert(trait::is_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
 
-static_assert(func::is_not_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
-static_assert(func::is_not_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
-static_assert(func::is_not_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
+static_assert(trait::is_not_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, int>>);
+static_assert(trait::is_not_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>, long>>);
+static_assert(trait::is_not_equalable_v<Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<1>, int>> == false);
 
 static_assert(Quantity<dim::Dimension<>, int>{1} == Quantity<dim::Dimension<>, long>{1});
 static_assert(Quantity<dim::Dimension<>, int>{1} != Quantity<dim::Dimension<>, long>{2});
 
-static_assert(func::is_compound_plusable_r_v<Quantity<dim::Dimension<>>&, Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>>);
-static_assert(func::is_compound_plusable_r_v<Quantity<dim::Dimension<>, int>&, Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>>>);
-static_assert(func::is_compound_plusable_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<1>>> == false);
+static_assert(trait::is_compound_plusable_r_v<Quantity<dim::Dimension<>>&, Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>>);
+static_assert(trait::is_compound_plusable_r_v<Quantity<dim::Dimension<>, int>&, Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>>>);
+static_assert(trait::is_compound_plusable_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<1>>> == false);
 
-static_assert(func::is_compound_minusable_r_v<Quantity<dim::Dimension<>>&, Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>>);
-static_assert(func::is_compound_minusable_r_v<Quantity<dim::Dimension<>, int>&, Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>>>);
-static_assert(func::is_compound_minusable_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<1>>> == false);
+static_assert(trait::is_compound_minusable_r_v<Quantity<dim::Dimension<>>&, Quantity<dim::Dimension<>>, Quantity<dim::Dimension<>>>);
+static_assert(trait::is_compound_minusable_r_v<Quantity<dim::Dimension<>, int>&, Quantity<dim::Dimension<>, int>, Quantity<dim::Dimension<>>>);
+static_assert(trait::is_compound_minusable_v<Quantity<dim::Dimension<>>, Quantity<dim::Dimension<1>>> == false);
 
 static_assert((Quantity<dim::Dimension<>, int>{1} += Quantity<dim::Dimension<>, long>{2}).value() == 3);
 static_assert((Quantity<dim::Dimension<>, int>{1} -= Quantity<dim::Dimension<>, long>{2}).value() == -1);
 
-static_assert(func::is_compound_multipliesable_r_v<Quantity<dim::Dimension<1>>&, Quantity<dim::Dimension<1>>, int>);
-static_assert(func::is_compound_multipliesable_r_v<Quantity<dim::Dimension<1>>&, Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<>>>);
-static_assert(func::is_compound_multipliesable_v<Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<1>>> == false);
+static_assert(trait::is_compound_multipliesable_r_v<Quantity<dim::Dimension<1>>&, Quantity<dim::Dimension<1>>, int>);
+static_assert(trait::is_compound_multipliesable_r_v<Quantity<dim::Dimension<1>>&, Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<>>>);
+static_assert(trait::is_compound_multipliesable_v<Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<1>>> == false);
 
-static_assert(func::is_compound_dividesable_r_v<Quantity<dim::Dimension<1>>&, Quantity<dim::Dimension<1>>, int>);
-static_assert(func::is_compound_dividesable_r_v<Quantity<dim::Dimension<1>>&, Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<>>>);
-static_assert(func::is_compound_dividesable_v<Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<1>>> == false);
+static_assert(trait::is_compound_dividesable_r_v<Quantity<dim::Dimension<1>>&, Quantity<dim::Dimension<1>>, int>);
+static_assert(trait::is_compound_dividesable_r_v<Quantity<dim::Dimension<1>>&, Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<>>>);
+static_assert(trait::is_compound_dividesable_v<Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<1>>> == false);
 
 static_assert((Quantity<dim::Dimension<>, int>{2} *= 3).value() == 6);
 static_assert((Quantity<dim::Dimension<>, int>{2} *= Quantity<dim::Dimension<>, int>{3}).value() == 6);
 static_assert((Quantity<dim::Dimension<>, int>{6} /= 3).value() == 2);
 static_assert((Quantity<dim::Dimension<>, int>{6} /= Quantity<dim::Dimension<>, int>{3}).value() == 2);
 
-static_assert(func::is_plusable_r_v<Quantity<dim::Dimension<>, decltype(number::Algebra0{} + number::Algebra1{})>,
-                                    Quantity<dim::Dimension<>, number::Algebra0>, Quantity<dim::Dimension<>, number::Algebra1>>);
-static_assert(func::is_plusable_v<Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<>>> == false);
-
-static_assert(func::is_minusable_r_v<Quantity<dim::Dimension<>, decltype(number::Algebra0{} - number::Algebra1{})>,
+static_assert(trait::is_plusable_r_v<Quantity<dim::Dimension<>, decltype(number::Algebra0{} + number::Algebra1{})>,
                                      Quantity<dim::Dimension<>, number::Algebra0>, Quantity<dim::Dimension<>, number::Algebra1>>);
-static_assert(func::is_minusable_v<Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<>>> == false);
+static_assert(trait::is_plusable_v<Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<>>> == false);
+
+static_assert(trait::is_minusable_r_v<Quantity<dim::Dimension<>, decltype(number::Algebra0{} - number::Algebra1{})>,
+                                      Quantity<dim::Dimension<>, number::Algebra0>, Quantity<dim::Dimension<>, number::Algebra1>>);
+static_assert(trait::is_minusable_v<Quantity<dim::Dimension<1>>, Quantity<dim::Dimension<>>> == false);
 
 static_assert((Quantity<dim::Dimension<>, int>{1} + Quantity<dim::Dimension<>, int>{2}).value() == 3);
 static_assert((Quantity<dim::Dimension<>, int>{1} - Quantity<dim::Dimension<>, int>{2}).value() == -1);
 
-static_assert(func::is_multipliesable_r_v<Quantity<dim::Dimension<3>, decltype(number::Algebra0{} * number::Algebra1{})>,
-                                          Quantity<dim::Dimension<1>, number::Algebra0>, Quantity<dim::Dimension<2>, number::Algebra1>>);
-static_assert(func::is_multipliesable_r_v<Quantity<dim::Dimension<1>, decltype(number::Algebra0{} * number::Algebra1{})>,
-                                          Quantity<dim::Dimension<1>, number::Algebra0>, number::Algebra1>);
-static_assert(func::is_multipliesable_r_v<Quantity<dim::Dimension<1>, decltype(number::Algebra0{} * number::Algebra1{})>,
-                                          number::Algebra0, Quantity<dim::Dimension<1>, number::Algebra1>>);
+static_assert(trait::is_multipliesable_r_v<Quantity<dim::Dimension<3>, decltype(number::Algebra0{} * number::Algebra1{})>,
+                                           Quantity<dim::Dimension<1>, number::Algebra0>, Quantity<dim::Dimension<2>, number::Algebra1>>);
+static_assert(trait::is_multipliesable_r_v<Quantity<dim::Dimension<1>, decltype(number::Algebra0{} * number::Algebra1{})>,
+                                           Quantity<dim::Dimension<1>, number::Algebra0>, number::Algebra1>);
+static_assert(trait::is_multipliesable_r_v<Quantity<dim::Dimension<1>, decltype(number::Algebra0{} * number::Algebra1{})>,
+                                           number::Algebra0, Quantity<dim::Dimension<1>, number::Algebra1>>);
 
-static_assert(func::is_dividesable_r_v<Quantity<dim::Dimension<-1>, decltype(number::Algebra0{} / number::Algebra1{})>,
-                                       Quantity<dim::Dimension<1>, number::Algebra0>, Quantity<dim::Dimension<2>, number::Algebra1>>);
-static_assert(func::is_dividesable_r_v<Quantity<dim::Dimension<1>, decltype(number::Algebra0{} / number::Algebra1{})>,
-                                       Quantity<dim::Dimension<1>, number::Algebra0>, number::Algebra1>);
-static_assert(func::is_dividesable_r_v<Quantity<dim::Dimension<-1>, decltype(number::Algebra0{} / number::Algebra1{})>,
-                                       number::Algebra0, Quantity<dim::Dimension<1>, number::Algebra1>>);
+static_assert(trait::is_dividesable_r_v<Quantity<dim::Dimension<-1>, decltype(number::Algebra0{} / number::Algebra1{})>,
+                                        Quantity<dim::Dimension<1>, number::Algebra0>, Quantity<dim::Dimension<2>, number::Algebra1>>);
+static_assert(trait::is_dividesable_r_v<Quantity<dim::Dimension<1>, decltype(number::Algebra0{} / number::Algebra1{})>,
+                                        Quantity<dim::Dimension<1>, number::Algebra0>, number::Algebra1>);
+static_assert(trait::is_dividesable_r_v<Quantity<dim::Dimension<-1>, decltype(number::Algebra0{} / number::Algebra1{})>,
+                                        number::Algebra0, Quantity<dim::Dimension<1>, number::Algebra1>>);
 
 static_assert((Quantity<dim::Dimension<>, int>{2} * Quantity<dim::Dimension<>, int>{3}).value() == 6);
 static_assert((Quantity<dim::Dimension<>, int>{2} * 3).value() == 6);
