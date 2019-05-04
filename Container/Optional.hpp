@@ -4,8 +4,8 @@
 #include <type_traits>
 #include <functional>
 
-#include "../Type/TypeTraits.hpp"
-#include "../functional_util.hpp"
+#include "../Traits/TypeTraits.hpp"
+#include "../Traits/FuncTraits.hpp"
 
 namespace rib
 {
@@ -16,7 +16,7 @@ class OptionalIterator;
 template <class T>
 class Optional : public std::optional<T>
 {
-    static constexpr bool is_nested = type::is_template_specialized_by_type_v<Optional, T>;
+    static constexpr bool is_nested = traits::is_template_specialized_by_type_v<Optional, T>;
 
     template <class U>
     struct deepest
@@ -52,70 +52,70 @@ public:
         }
     }
 
-    template <class Func, class... Args>
-    constexpr Optional<T>& visit(Func&& func, Args&&... args) const&
+    template <class F, class... Args>
+    constexpr const Optional<T>& visit(F&& f, Args&&... args) const&
     {
         if (this->has_value()) {
-            std::invoke(std::forward<Func>(func), **this, std::forward<Args>(args)...);
+            traits::invoke_constexpr(std::forward<F>(f), **this, std::forward<Args>(args)...);
         }
         return *this;
     }
-    template <class Func, class... Args>
-    constexpr Optional<T>& visit(Func&& func, Args&&... args) &
+    template <class F, class... Args>
+    constexpr Optional<T>& visit(F&& f, Args&&... args) &
     {
         if (this->has_value()) {
-            std::invoke(std::forward<Func>(func), **this, std::forward<Args>(args)...);
+            traits::invoke_constexpr(std::forward<F>(f), **this, std::forward<Args>(args)...);
         }
         return *this;
     }
-    template <class Func, class... Args>
-    constexpr Optional<T>& visit(Func&& func, Args&&... args) &&
+    template <class F, class... Args>
+    constexpr Optional<T> visit(F&& f, Args&&... args) &&
     {
         if (this->has_value()) {
-            std::invoke(std::forward<Func>(func), std::move(**this), std::forward<Args>(args)...);
+            traits::invoke_constexpr(std::forward<F>(f), **this, std::forward<Args>(args)...);
         }
-        return *this;
+        return std::move(*this);
     }
 
-    template <class Func, class... Args, class R = std::invoke_result_t<Func, T, Args...>>
-    constexpr auto invoke(Func&& func, Args&&... args) const& -> Optional<deepest_t<R>>
+    template <class F, class... Args>
+    constexpr auto map(F&& f, Args&&... args) const& -> Optional<deepest_t<std::invoke_result_t<F, T, Args...>>>
     {
         if (this->has_value()) {
-            return std::invoke(std::forward<Func>(func), **this, std::forward<Args>(args)...);
+            return traits::invoke_constexpr(std::forward<F>(f), **this, std::forward<Args>(args)...);
         }
         return std::nullopt;
     }
-    template <class Func, class... Args, class R = std::invoke_result_t<Func, T, Args...>>
-    constexpr auto invoke(Func&& func, Args&&... args) & -> Optional<deepest_t<R>>
+    template <class F, class... Args>
+    constexpr auto map(F&& f, Args&&... args) & -> Optional<deepest_t<std::invoke_result_t<F, T, Args...>>>
     {
         if (this->has_value()) {
-            return std::invoke(std::forward<Func>(func), **this, std::forward<Args>(args)...);
+            return traits::invoke_constexpr(std::forward<F>(f), **this, std::forward<Args>(args)...);
         }
         return std::nullopt;
     }
-    template <class Func, class... Args, class R = std::invoke_result_t<Func, T, Args...>>
-    constexpr auto invoke(Func&& func, Args&&... args) && -> Optional<deepest_t<R>>
+    template <class F, class... Args>
+    constexpr auto map(F&& f, Args&&... args) && -> Optional<deepest_t<std::invoke_result_t<F, T, Args...>>>
     {
         if (this->has_value()) {
-            return std::invoke(std::forward<Func>(func), std::move(**this), std::forward<Args>(args)...);
+            return traits::invoke_constexpr(std::forward<F>(f), std::move(**this), std::forward<Args>(args)...);
         }
         return std::nullopt;
     }
 
-    template <class Func>
-    constexpr auto operator|(Func&& func) const& -> Optional<deepest_t<std::invoke_result_t<Func, T>>>
+    template <class F>
+    constexpr auto operator|(F&& f) const& -> Optional<deepest_t<std::invoke_result_t<F, T>>>
     {
-        return invoke(std::forward<Func>(func));
+        return map(std::forward<F>(f));
     }
-    template <class Func>
-    constexpr auto operator|(Func&& func) & -> Optional<deepest_t<std::invoke_result_t<Func, T>>>
+    template <class F>
+    constexpr auto operator|(F&& f) & -> Optional<deepest_t<std::invoke_result_t<F, T>>>
     {
-        return invoke(std::forward<Func>(func));
+        return map(std::forward<F>(f));
     }
-    template <class Func>
-    constexpr auto operator|(Func&& func) && -> Optional<deepest_t<std::invoke_result_t<Func, T>>>
+    template <class F>
+    constexpr auto operator|(F&& f) && -> Optional<deepest_t<std::invoke_result_t<F, T>>>
     {
-        return invoke(std::forward<Func>(func));
+        return map(std::forward<F>(f));
     }
 
     constexpr OptionalIterator<const T> begin() const { return this; }
@@ -136,19 +136,13 @@ public:
     using iterator_category = std::forward_iterator_tag;
 
 private:
-    using Optional_type = type::copy_const_t<T, Optional<std::remove_const_t<T>>>;
+    using Optional_type = traits::copy_const_t<T, Optional<std::remove_const_t<T>>>;
     friend std::remove_const_t<Optional_type>;
 
     Optional_type* ptr = nullptr;
 
     constexpr OptionalIterator(Optional_type* p)
-    {
-        if (p && p->has_value()) {
-            ptr = p;
-        } else {
-            ptr = nullptr;
-        }
-    }
+        : ptr(p && p->has_value() ? p : nullptr) {}
 
 public:
     constexpr OptionalIterator() = default;
@@ -180,29 +174,38 @@ static_assert(std::is_default_constructible_v<Optional<int>>);
 static_assert(std::is_constructible_v<Optional<int>, int>);
 static_assert(std::is_constructible_v<Optional<int>, std::nullopt_t>);
 
-static_assert(std::is_same_v<RESULT_T(Optional<int>, unwrap()),
+static_assert(std::is_same_v<decltype(std::declval<Optional<int>>().unwrap()),
                              Optional<int>>);
-static_assert(std::is_same_v<RESULT_T(Optional<Optional<int>>, unwrap()),
+static_assert(std::is_same_v<decltype(std::declval<Optional<Optional<int>>>().unwrap()),
                              Optional<int>>);
 
-static_assert(std::is_same_v<RESULT_T(Optional<int>, invoke(DECLV(long(int)))),
+static_assert(std::is_same_v<decltype(std::declval<Optional<int>>().visit(std::declval<long(int)>())),
+                             Optional<int>>);
+
+static_assert(std::is_same_v<decltype(std::declval<Optional<int>>().map(std::declval<long(int)>())),
                              Optional<long>>);
-static_assert(std::is_same_v<RESULT_T(Optional<int>, invoke(DECLV(Optional<long>(int)))),
+static_assert(std::is_same_v<decltype(std::declval<Optional<int>>().map(std::declval<Optional<long>(int)>())),
                              Optional<long>>);
-static_assert(std::is_same_v<RESULT_T(Optional<int>, invoke(DECLV(std::optional<long>(int)))),
+static_assert(std::is_same_v<decltype(std::declval<Optional<int>>().map(std::declval<std::optional<long>(int)>())),
                              Optional<long>>);
 
-static_assert(type::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, long(int)>);
-static_assert(type::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, Optional<long>(int)>);
-static_assert(type::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, std::optional<long>(int)>);
+static_assert([] {
+    auto lmd = [](int x) { return x + 1; };
+    return Optional<int>(1).map(lmd) == 2 &&
+           Optional<int>().map(lmd) == std::nullopt;
+}());
 
-static_assert(std::is_same_v<RESULT_T(Optional<int>, begin()),
+static_assert(traits::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, long(int)>);
+static_assert(traits::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, Optional<long>(int)>);
+static_assert(traits::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, std::optional<long>(int)>);
+
+static_assert(std::is_same_v<decltype(std::declval<Optional<int>>().begin()),
                              OptionalIterator<int>>);
-static_assert(std::is_same_v<RESULT_T(const Optional<int>, begin()),
+static_assert(std::is_same_v<decltype(std::declval<const Optional<int>>().begin()),
                              OptionalIterator<const int>>);
 
-static_assert(std::is_same_v<decltype(*DECLV(OptionalIterator<int>)), int&>);
-static_assert(std::is_same_v<decltype(*DECLV(OptionalIterator<const int>)), const int&>);
+static_assert(std::is_same_v<decltype(*std::declval<OptionalIterator<int>>()), int&>);
+static_assert(std::is_same_v<decltype(*std::declval<OptionalIterator<const int>>()), const int&>);
 
 static_assert([] {
     int a = 0;
