@@ -27,9 +27,21 @@ struct Unexpect_tag
 };
 inline constexpr Unexpect_tag unexpect_tag_v{};
 
+/**
+ * @brief Expected
+ * this primary template use to detection idiom
+ * @tparam T require destructible
+ * @tparam E require destructible
+ */
 template <class T, class E, class /* for detection ideom */ = void>
 class Expected;
 
+/**
+ * @brief Expected value
+ * like `Result` in `rust`
+ * @tparam T Ok
+ * @tparam E Err
+ */
 template <class T, class E>
 class[[nodiscard]] Expected<T, E,
                             std::enable_if_t<std::is_destructible_v<T> && std::is_destructible_v<E>>>
@@ -348,6 +360,11 @@ public:
         return trait::invoke_constexpr(std::forward<F>(f), std::move(**this));
     }
 
+    /**
+     * @brief then
+     * @param f invoke(f, *this) -> {Expected<U, X> or U}
+     * @return if f returns Expected then f(*this) otherwise Expected<f(*this), E>
+     */
     template <class F>
     constexpr auto then(F && f) const&->typename Expected<std::invoke_result_t<F, Expected>, E>::Unwrap_t
     {
@@ -364,6 +381,11 @@ public:
         return trait::invoke_constexpr(std::forward<F>(f), std::move(*this));
     }
 
+    /**
+     * @brief catch_error
+     * @param f invoke(f, error()) -> T
+     * @return Expected<T, E>
+     */
     template <class F>
     constexpr Expected catch_error(F && f) const&
     {
@@ -383,6 +405,11 @@ public:
         return trait::invoke_constexpr(std::forward<F>(f), std::move(error_noexcept()));
     }
 
+    /**
+     * @brief emap
+     * @param f invoke(f, error()) -> X
+     * @return Expected<T, decltype(f(error()))>>
+     */
     template <class F>
     constexpr auto emap(F && f) const&->Expected<T, std::invoke_result_t<F, E>>
     {
@@ -403,6 +430,10 @@ public:
     }
 };
 
+/**
+ * @brief indicate unexpect value
+ * @tparam E
+ */
 template <class E>
 class Unexpected
 {
