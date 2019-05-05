@@ -172,14 +172,55 @@ constexpr bool is_result_v = is_result<R, F, Args...>::value;
 static_assert(is_result_v<int, int(int), int>);
 static_assert(!is_result_v<int, long(int), int>);
 
+namespace detail
+{
+template <class R, class T, class T1, class... Args>
+inline constexpr decltype(auto) invoke_constexpr_helper(R T::*f, T1&& t1, Args&&... args)
+{
+    if constexpr (std::is_member_function_pointer_v<decltype(f)>) {
+        if constexpr (std::is_base_of_v<T, std::decay_t<T1>>) {
+            return (std::forward<T1>(t1).*f)(std::forward<Args>(args)...);
+        } else if constexpr (is_template_specialized_by_type_v<std::reference_wrapper, std::decay_t<T1>>) {
+            return (std::forward<T1>(t1.get().*f))(std::forward<Args>(args)...);
+        } else {
+            return ((*std::forward<T1>(t1)).*f)(std::forward<Args>(args)...);
+        }
+    } else {
+        static_assert(std::is_member_object_pointer_v<decltype(f)>);
+        static_assert(sizeof...(args) == 0);
+        if constexpr (std::is_base_of_v<T, std::decay_t<T1>>) {
+            return std::forward<T1>(t1).*f;
+        } else if constexpr (is_template_specialized_by_type_v<std::reference_wrapper, std::decay_t<T1>>) {
+            return t1.get().*f;
+        } else {
+            return (*std::forward<T1>(t1)).*f;
+        }
+    }
+}
+template <class F, class... Args>
+inline constexpr decltype(auto) invoke_constexpr_helper(F&& f, Args&&... args)
+{
+    return std::forward<F>(f)(std::forward<Args>(args)...);
+}
+
+} // namespace detail
+
 template <class F, class... Args>
 inline constexpr std::invoke_result_t<F, Args...> invoke_constexpr(F&& f, Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>)
 {
-    if constexpr (std::is_member_pointer_v<F>) {
-        return std::invoke(std::forward<F>(f), std::forward<Args>(args)...);
-    } else {
-        return f(std::forward<Args>(args)...);
-    }
+    return detail::invoke_constexpr_helper(std::forward<F>(f), std::forward<Args>(args)...);
 }
+
+static_assert(invoke_constexpr([](auto x) { return x + 1; }, 1) == 2);
+static_assert([] {
+    struct A
+    {
+        int x;
+        constexpr int f(int y) { return x + y; }
+    };
+    A a{1};
+    return invoke_constexpr(&A::x, a) == 1 &&
+           invoke_constexpr(&A::f, a, 1) == 2;
+}());
 
 } // namespace rib::trait
