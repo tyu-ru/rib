@@ -1,10 +1,10 @@
 #pragma once
 
-#include <type_traits>
 #include <utility>
-#include "Traits/FuncTraits.hpp"
+#include "../Traits/FuncTraits.hpp"
+#include "../Traits/TypeTraits.hpp"
 
-namespace rib::operators
+namespace rib::mixin
 {
 
 template <class Derived>
@@ -32,11 +32,11 @@ struct LessThanComparable
 template <class Derived>
 struct EqualityComparable
 {
-    template <class T, std::enable_if_t<trait::is_equalable_v<Derived, std::decay_t<T>>, std::nullptr_t> = nullptr>
+    template <class T, trait::concept_t<trait::is_equalable_v<Derived, std::decay_t<T>>> = nullptr>
     friend constexpr bool operator!=(const Derived& lhs, T&& rhs)
     {
         return !(lhs == rhs);
     }
 };
 
-} // namespace rib::operators
+} // namespace rib::mixin

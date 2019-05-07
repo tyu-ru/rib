@@ -2,7 +2,7 @@
 
 #include <utility>
 #include "Dimension/Dimension.hpp"
-#include "../Operators.hpp"
+#include "../Mixin/Operators.hpp"
 #include "../Traits/TypeTraits.hpp"
 #include "../Traits/FuncTraits.hpp"
 #include "../Number/Algebra.hpp"
@@ -20,8 +20,8 @@ namespace rib::units
  * @tparam Value value type
  */
 template <class Dimension, class Value = double>
-class Quantity : operators::LessThanComparable<Quantity<Dimension, Value>>,
-                 operators::EqualityComparable<Quantity<Dimension, Value>>
+class Quantity : mixin::LessThanComparable<Quantity<Dimension, Value>>,
+                 mixin::EqualityComparable<Quantity<Dimension, Value>>
 {
     static_assert(trait::is_template_specialized_by_value_v<dim::Dimension, Dimension>);
 
