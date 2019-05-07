@@ -194,6 +194,11 @@ static_assert([] {
     return Optional<int>(1).map(lmd) == 2 &&
            Optional<int>().map(lmd) == std::nullopt;
 }());
+static_assert([] {
+    auto lmd = [](int x) { return Optional<int>(x + 1); };
+    return Optional<int>(1).map(lmd) == 2 &&
+           Optional<int>().map(lmd) == std::nullopt;
+}());
 
 static_assert(trait::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, long(int)>);
 static_assert(trait::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, Optional<long>(int)>);
