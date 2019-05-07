@@ -9,6 +9,7 @@ namespace rib::type
  * @brief type adapter
  * @details type information at copyable
  * @tparam T type
+ * @sa std::type_identity (c++20)
  */
 template <class T>
 struct TypeAdapter
@@ -28,14 +29,14 @@ struct TemplateAdapterByType
     /**
      * @brief template specialization
      * @details equal Template<Args...>
-     * @tparam Args 
+     * @tparam Args
      */
     template <class... Args>
     using Specialize = Template<Args...>;
     /**
      * @brief TypeAdapter
      * @details equal TypeAdapter<Template<Args...>>
-     * @tparam Args 
+     * @tparam Args
      */
     template <class... Args>
     using TypeAdapter = TypeAdapter<Template<Args...>>;
@@ -51,19 +52,32 @@ struct TemplateAdapterByValue
     /**
      * @brief template specialization
      * @details equal Template<args...>
-     * @tparam args 
+     * @tparam args
      */
     template <auto... args>
     using Specialize = Template<args...>;
     /**
      * @brief TypeAdapter
      * @details equal TypeAdapter<Template<args...>>
-     * @tparam args 
+     * @tparam args
      */
     template <auto... args>
     using TypeAdapter = TypeAdapter<Template<args...>>;
 };
 
+template <class>
+struct TemplateAdapterFromType;
+template <template <class...> class Template, class... Args>
+struct TemplateAdapterFromType<Template<Args...>>
+{
+    using type = TemplateAdapterByType<Template>;
+};
+
+/**
+ * @brief template argument binder
+ * @tparam Template class template
+ * @tparam BoundArgs binding types
+ */
 template <template <class...> class Template, class... BoundArgs>
 struct TemplateBind
 {
