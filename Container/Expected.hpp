@@ -28,24 +28,13 @@ struct Unexpect_tag
 inline constexpr Unexpect_tag unexpect_tag_v{};
 
 /**
- * @brief Expected
- * this primary template use to detection idiom
- * @tparam T require destructible
- * @tparam E require destructible
- */
-template <class T, class E, class /* for detection ideom */ = void>
-class Expected;
-
-/**
  * @brief Expected value
  * like `Result` in `rust`
- * @tparam T Ok
- * @tparam E Err
+ * @tparam T Ok (require destructible)
+ * @tparam E Err (require destructible)
  */
-template <class T, class E>
-class[[nodiscard]] Expected<T, E,
-                            std::enable_if_t<std::is_destructible_v<T> && std::is_destructible_v<E>>>
-{
+template <class T, class E, trait::concept_t<std::is_destructible_v<T> && std::is_destructible_v<E>> = nullptr>
+class [[nodiscard]] Expected {
     struct Ok
     {
         T v;
@@ -88,9 +77,9 @@ public:
     /// [deleted] default constructor
     constexpr Expected() = delete;
     /// copy constructor
-    constexpr Expected(const Expected& other) noexcept(std::is_nothrow_copy_constructible_v<decltype(payload)>) = default;
+    constexpr Expected(const Expected&) noexcept(std::is_nothrow_copy_constructible_v<decltype(payload)>) = default;
     /// move constructor
-    constexpr Expected(Expected && other) noexcept(std::is_nothrow_move_constructible_v<decltype(payload)>) = default;
+    constexpr Expected(Expected &&) noexcept(std::is_nothrow_move_constructible_v<decltype(payload)>) = default;
 
     /// construct by ok value
     template <class... Args, trait::concept_t<std::is_constructible_v<T, Args&&...>> = nullptr>
@@ -109,6 +98,11 @@ public:
     template <class... Args, trait::concept_t<std::is_constructible_v<E, Args&&...>> = nullptr>
     constexpr Expected(Unexpect_tag, Args && ... args) noexcept(std::is_nothrow_constructible_v<E, Args&&...>)
         : payload(std::in_place_type<Err>, std::forward<Args>(args)...) {}
+
+    /// copy assign
+    constexpr Expected& operator=(const Expected&) = default;
+    /// move assign
+    constexpr Expected& operator=(Expected&&) = default;
 
     /// has ok value
     constexpr bool valid() const noexcept { return std::holds_alternative<Ok>(payload); }
@@ -148,7 +142,7 @@ public:
         if (valid()) return **this;
         return static_cast<T>(std::forward<U>(default_value));
     }
-    /// if `*this` has value returns contained value, otherwise returns default_value
+    /// if *this has value returns contained value, otherwise returns default_value
     template <class U>
     constexpr T value_or(U && default_value)&&
     {
@@ -220,88 +214,88 @@ public:
     }
 
     /// regenerate Unexpected
-    constexpr Unexpected<E> unexpected() const&
+    constexpr Unexpected<E> unexpected() const& noexcept(false)
     {
         return Unexpected(error());
     }
     /// regenerate Unexpected
-    constexpr Unexpected<E> unexpected()&&
+    constexpr Unexpected<E> unexpected() && noexcept(false)
     {
         return Unexpected(std::move(error()));
     }
 
     /// optional<T>
-    constexpr std::optional<T> optional() const&
+    constexpr std::optional<T> optional() const& noexcept(std::is_nothrow_copy_constructible_v<T>)
     {
         if (valid()) return **this;
         return std::nullopt;
     }
     /// optional<T>
-    constexpr std::optional<T> optional()&&
+    constexpr std::optional<T> optional() && noexcept(std::is_nothrow_copy_constructible_v<T>)
     {
         if (valid()) return std::move(**this);
         return std::nullopt;
     }
 
     /// equally compare
-    friend constexpr bool operator==(const Expected& lhs, const Expected& rhs)
+    friend constexpr bool operator==(const Expected& lhs, const Expected& rhs) noexcept
     {
         if (lhs && rhs) return *lhs == *rhs;
         if (!lhs && !rhs) return lhs.error() == rhs.error();
         return false;
     }
     /// unequally compare
-    friend constexpr bool operator!=(const Expected& lhs, const Expected& rhs)
+    friend constexpr bool operator!=(const Expected& lhs, const Expected& rhs) noexcept
     {
         return !(lhs == rhs);
     }
 
     /// equally compare
     template <class U>
-    friend constexpr bool operator==(const Expected& lhs, const U& rhs)
+    friend constexpr bool operator==(const Expected& lhs, const U& rhs) noexcept
     {
         if (lhs) return *lhs == rhs;
         return false;
     }
     /// unequally compare
     template <class U>
-    friend constexpr bool operator!=(const Expected& lhs, const U& rhs)
+    friend constexpr bool operator!=(const Expected& lhs, const U& rhs) noexcept
     {
         return !(lhs == rhs);
     }
     /// equally compare
     template <class U>
-    friend constexpr bool operator==(const U& lhs, const Expected& rhs)
+    friend constexpr bool operator==(const U& lhs, const Expected& rhs) noexcept
     {
         if (rhs) return lhs == *rhs;
         return false;
     }
     /// unequally compare
     template <class U>
-    friend constexpr bool operator!=(const U& lhs, const Expected& rhs)
+    friend constexpr bool operator!=(const U& lhs, const Expected& rhs) noexcept
     {
         return !(lhs == rhs);
     }
 
     /// equally compare
-    friend constexpr bool operator==(const Expected& lhs, const Unexpected<E>& rhs)
+    friend constexpr bool operator==(const Expected& lhs, const Unexpected<E>& rhs) noexcept
     {
         if (!lhs) return lhs.error() == rhs.value();
         return false;
     }
     /// unequally compare
-    friend constexpr bool operator!=(const Expected& lhs, const Unexpected<E>& rhs)
+    friend constexpr bool operator!=(const Expected& lhs, const Unexpected<E>& rhs) noexcept
     {
         return !(lhs == rhs);
     }
     /// equally compare
-    friend constexpr bool operator==(const Unexpected<E>& lhs, const Expected& rhs)
+    friend constexpr bool operator==(const Unexpected<E>& lhs, const Expected& rhs) noexcept
     {
         if (!rhs) return lhs.value() == rhs.error();
         return false;
     }
     /// unequally compare
-    friend constexpr bool operator!=(const Unexpected<E>& lhs, const Expected& rhs)
+    friend constexpr bool operator!=(const Unexpected<E>& lhs, const Expected& rhs) noexcept
     {
         return !(lhs == rhs);
     }
@@ -428,6 +422,33 @@ public:
         if (valid()) return std::move(**this);
         return {unexpect_tag_v, trait::invoke_constexpr(std::forward<F>(f), std::move(error()))};
     }
+
+    /**
+     * @brief mach
+     * int x = expected.mach<int>(ok_func, err_func);
+     * @tparam R return type
+     * @param f_ok ok
+     * @param f_err err
+     * @return std::common_type_t<decltype(f_ok(value())), decltype(f_err(error()))>
+     */
+    template <class R, class F_OK, class F_ERR>
+    constexpr R mach(F_OK && f_ok, F_ERR && f_err) const&
+    {
+        if (valid()) return trait::invoke_constexpr(std::forward<F_OK>(f_ok), **this);
+        return trait::invoke_constexpr(std::forward<F_ERR>(f_err), error_noexcept());
+    }
+    template <class R, class F_OK, class F_ERR>
+    constexpr R mach(F_OK && f_ok, F_ERR && f_err)&
+    {
+        if (valid()) return trait::invoke_constexpr(std::forward<F_OK>(f_ok), **this);
+        return trait::invoke_constexpr(std::forward<F_ERR>(f_err), error_noexcept());
+    }
+    template <class R, class F_OK, class F_ERR>
+    constexpr R mach(F_OK && f_ok, F_ERR && f_err)&&
+    {
+        if (valid()) return trait::invoke_constexpr(std::forward<F_OK>(f_ok), std::move(**this));
+        return trait::invoke_constexpr(std::forward<F_ERR>(f_err), std::move(error_noexcept()));
+    }
 };
 
 /**
@@ -460,6 +481,12 @@ static_assert(std::is_constructible_v<Expected<int, int>, int>);
 static_assert(std::is_constructible_v<Expected<int, int>, Unexpected<int>>);
 static_assert(std::is_constructible_v<Expected<int, int>, Unexpected<int>&&>);
 static_assert(std::is_constructible_v<Expected<int, int>, Unexpect_tag, int>);
+
+static_assert(std::is_copy_assignable_v<Expected<int, int>>);
+static_assert(std::is_move_assignable_v<Expected<int, int>>);
+
+static_assert(std::is_assignable_v<Expected<int, long>, int>);
+static_assert(std::is_assignable_v<Expected<int, long>, Unexpected<long>>);
 
 static_assert(std::is_same_v<Expected<int, int>::Unwrap_t, Expected<int, int>>);
 static_assert(std::is_same_v<Expected<Expected<int, int>, int>::Unwrap_t, Expected<int, int>>);
@@ -574,6 +601,18 @@ static_assert([] {
     auto lmd = [](int x) { return x + 1; };
     return Expected<int, int>(1).emap(lmd) == 1 &&
            Expected<int, int>(Unexpected(2)).emap(lmd).error() == 3;
+}());
+
+static_assert(std::is_same_v<decltype(std::declval<Expected<int, int>>().mach<int>(std::declval<double(int)>(), std::declval<float(int)>())),
+                             int>);
+static_assert(std::is_same_v<decltype(std::declval<Expected<int, int>>().mach<void>(std::declval<void(int)>(), std::declval<float(int)>())),
+                             void>);
+
+static_assert([] {
+    auto lmd1 = [](int x) { return x + 1; };
+    auto lmd2 = [](int x) { return x + 2; };
+    return Expected<int, int>(1).mach<int>(lmd1, lmd2) == 2 &&
+           Expected<int, int>(Unexpected(1)).mach<int>(lmd1, lmd2) == 3;
 }());
 
 } // namespace rib
