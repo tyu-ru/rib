@@ -7,9 +7,33 @@ namespace rib::trait
 {
 
 /**
+ * @brief
+ * @tparam lass
+ */
+template <class>
+struct is_template_specialized : std::false_type
+{
+};
+/**
+ * @brief
+ * @tparam Template
+ * @tparam Args
+ */
+template <template <class...> class Template, class... Args>
+struct is_template_specialized<Template<Args...>> : std::true_type
+{
+};
+/**
+ * @brief
+ * @tparam T
+ */
+template <class T>
+constexpr bool is_template_specialized_v = is_template_specialized<T>::value;
+
+/**
  * @brief check whether Instance is specialization ob Template
- * @tparam Template 
- * @tparam Instance 
+ * @tparam Template
+ * @tparam Instance
  * @sa is_template_specialized_by_value
  * @sa is_template_specialized_by_type_v
  */
@@ -19,8 +43,8 @@ struct is_template_specialized_by_type : std::false_type
 };
 /**
  * @brief check whether Instance is specialization ob Template
- * @tparam Template 
- * @tparam Instance 
+ * @tparam Template
+ * @tparam Instance
  * @sa is_template_specialized_by_value
  * @sa is_template_specialized_by_type_v
  */
@@ -30,16 +54,16 @@ struct is_template_specialized_by_type<Template, Template<Args...>> : std::true_
 };
 /**
  * @brief helper variable template: is_template_specialized_by_type
- * @tparam Template 
- * @tparam Instance 
+ * @tparam Template
+ * @tparam Instance
  */
 template <template <class...> class Template, class Instance>
 constexpr bool is_template_specialized_by_type_v = is_template_specialized_by_type<Template, Instance>::value;
 
 /**
  * @brief check whether Instance is specialization ob Template
- * @tparam Template 
- * @tparam Instance 
+ * @tparam Template
+ * @tparam Instance
  * @sa is_template_specialized_by_type
  * @sa is_template_specialized_by_value_v
  */
@@ -49,8 +73,8 @@ struct is_template_specialized_by_value : std::false_type
 };
 /**
  * @brief check whether Instance is specialization ob Template
- * @tparam Template 
- * @tparam Instance 
+ * @tparam Template
+ * @tparam Instance
  * @sa is_template_specialized_by_type
  * @sa is_template_specialized_by_value_v
  */
@@ -60,8 +84,8 @@ struct is_template_specialized_by_value<Template, Template<Args...>> : std::true
 };
 /**
  * @brief helper variable template: is_template_specialized_by_value
- * @tparam Template 
- * @tparam Instance 
+ * @tparam Template
+ * @tparam Instance
  */
 template <template <auto...> class Template, class Instance>
 constexpr bool is_template_specialized_by_value_v = is_template_specialized_by_value<Template, Instance>::value;
