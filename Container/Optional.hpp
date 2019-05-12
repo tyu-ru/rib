@@ -6,6 +6,7 @@
 
 #include "../Traits/TypeTraits.hpp"
 #include "../Traits/FuncTraits.hpp"
+#include "../Mixin/NullableAccepter.hpp"
 
 namespace rib
 {
@@ -14,7 +15,9 @@ template <class T>
 class OptionalIterator;
 
 template <class T>
-class Optional : public std::optional<T>
+class Optional
+    : public mixin::NullableAccepter<Optional<T>>,
+      public std::optional<T>
 {
     static constexpr bool is_nested = trait::is_template_specialized_by_type_v<Optional, T>;
 
@@ -50,31 +53,6 @@ public:
         } else {
             return **this;
         }
-    }
-
-    template <class F, class... Args>
-    constexpr const Optional<T>& visit(F&& f, Args&&... args) const&
-    {
-        if (this->has_value()) {
-            trait::invoke_constexpr(std::forward<F>(f), **this, std::forward<Args>(args)...);
-        }
-        return *this;
-    }
-    template <class F, class... Args>
-    constexpr Optional<T>& visit(F&& f, Args&&... args) &
-    {
-        if (this->has_value()) {
-            trait::invoke_constexpr(std::forward<F>(f), **this, std::forward<Args>(args)...);
-        }
-        return *this;
-    }
-    template <class F, class... Args>
-    constexpr Optional<T> visit(F&& f, Args&&... args) &&
-    {
-        if (this->has_value()) {
-            trait::invoke_constexpr(std::forward<F>(f), **this, std::forward<Args>(args)...);
-        }
-        return std::move(*this);
     }
 
     template <class F, class... Args>
