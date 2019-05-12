@@ -7,16 +7,15 @@
 #include "../Traits/TypeTraits.hpp"
 #include "../Traits/FuncTraits.hpp"
 #include "../Mixin/NullableAccepter.hpp"
+#include "../Iterator/MaybeIterator.hpp"
 
 namespace rib
 {
 
 template <class T>
-class OptionalIterator;
-
-template <class T>
 class Optional
     : public mixin::NullableAccepter<Optional<T>>,
+      public MayBeIteratible<Optional<T>, T>,
       public std::optional<T>
 {
     static constexpr bool is_nested = trait::is_template_specialized_by_type_v<Optional, T>;
@@ -95,57 +94,6 @@ public:
     {
         return map(std::forward<F>(f));
     }
-
-    constexpr OptionalIterator<const T> begin() const { return this; }
-    constexpr OptionalIterator<T> begin() { return this; }
-
-    constexpr OptionalIterator<const T> end() const { return nullptr; }
-    constexpr OptionalIterator<T> end() { return nullptr; }
-};
-
-template <class T>
-class OptionalIterator
-{
-public:
-    using difference_type = std::size_t;
-    using value_type = T;
-    using pointer = T*;
-    using reference = T&;
-    using iterator_category = std::forward_iterator_tag;
-
-private:
-    using Optional_type = trait::copy_const_t<T, Optional<std::remove_const_t<T>>>;
-    friend std::remove_const_t<Optional_type>;
-
-    Optional_type* ptr = nullptr;
-
-    constexpr OptionalIterator(Optional_type* p)
-        : ptr(p && p->has_value() ? p : nullptr) {}
-
-public:
-    constexpr OptionalIterator() = default;
-    constexpr OptionalIterator(const OptionalIterator&) = default;
-    constexpr OptionalIterator(OptionalIterator&&) = default;
-
-    constexpr T& operator*() const { return **ptr; }
-    constexpr T& operator*() { return **ptr; }
-
-    constexpr OptionalIterator& operator++()
-    {
-        ptr = nullptr;
-        return *this;
-    }
-    constexpr OptionalIterator operator++(int)
-    {
-        auto t = *this;
-        ptr = nullptr;
-        return t;
-    }
-
-    constexpr friend bool operator!=(const OptionalIterator& lhs, const OptionalIterator& rhs)
-    {
-        return lhs.ptr != rhs.ptr;
-    }
 };
 
 static_assert(std::is_default_constructible_v<Optional<int>>);
@@ -181,14 +129,6 @@ static_assert([] {
 static_assert(trait::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, long(int)>);
 static_assert(trait::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, Optional<long>(int)>);
 static_assert(trait::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, std::optional<long>(int)>);
-
-static_assert(std::is_same_v<decltype(std::declval<Optional<int>>().begin()),
-                             OptionalIterator<int>>);
-static_assert(std::is_same_v<decltype(std::declval<const Optional<int>>().begin()),
-                             OptionalIterator<const int>>);
-
-static_assert(std::is_same_v<decltype(*std::declval<OptionalIterator<int>>()), int&>);
-static_assert(std::is_same_v<decltype(*std::declval<OptionalIterator<const int>>()), const int&>);
 
 static_assert([] {
     int a = 0;
