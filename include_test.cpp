@@ -9,6 +9,10 @@
 #include "Units/Quantity.hpp"
 
 #include <iostream>
+#include <optional>
+
+#include "Iterator/MaybeIterator.hpp"
+#include "Container/MaybeRange.hpp"
 
 int main()
 {
@@ -17,6 +21,13 @@ int main()
     a.visit(VISITOR(x, x += 1;));
 
     std::cout << a.value_or(0) << " " << a.map([](int x) { return x + 1; }).value_or(0) << std::endl;
+
+    for (auto&& x[[maybe_unused]] : rib::MaybeRange(std::optional<int>(std::nullopt))) {
+        std::cout << "fuxx" << std::endl;
+    }
+    for (auto&& x : rib::MaybeRange(std::optional<int>(1))) {
+        std::cout << x << std::endl;
+    }
 
     return 0;
 }

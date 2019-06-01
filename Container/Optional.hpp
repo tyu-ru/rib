@@ -15,7 +15,7 @@ namespace rib
 template <class T>
 class Optional
     : public mixin::NullableAccepter<Optional<T>>,
-      public MayBeIteratible<Optional<T>, T>,
+      public MaybeIteratible<Optional<T>, T>,
       public std::optional<T>
 {
     static constexpr bool is_nested = trait::is_template_specialized_by_type_v<Optional, T>;

@@ -45,7 +45,8 @@
 			"chrono": "cpp",
 			"ratio": "cpp",
 			"cstring": "cpp",
-			"ctime": "cpp"
+			"ctime": "cpp",
+			"iostream": "cpp"
 		},
 		"C_Cpp.default.cppStandard": "c++17",
 		"C_Cpp.default.cStandard": "c11"

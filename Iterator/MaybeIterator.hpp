@@ -6,12 +6,15 @@ namespace rib
 {
 
 template <class Derived, class T>
-struct MayBeIteratible;
+struct MaybeConstIteratible;
+template <class Derived, class T>
+struct MaybeIteratible;
 
 template <class T, class Tag>
 class MaybeIterator
 {
-    friend MayBeIteratible<Tag, T>;
+    friend MaybeIteratible<Tag, T>;
+    friend MaybeConstIteratible<Tag, std::remove_const_t<T>>;
 
 public:
     using difference_type = std::size_t;
@@ -58,7 +61,7 @@ template <class T, class Tag>
 using MaybeConstIterator = MaybeIterator<const T, Tag>;
 
 template <class Derived, class T>
-struct MayBeIteratible
+struct MaybeConstIteratible
 {
     constexpr MaybeConstIterator<T, Derived> begin() const
     {
@@ -66,6 +69,12 @@ struct MayBeIteratible
         if (d) return &*d;
         return nullptr;
     }
+    constexpr MaybeConstIterator<T, Derived> end() const { return nullptr; }
+};
+
+template <class Derived, class T>
+struct MaybeIteratible : public MaybeConstIteratible<Derived, T>
+{
     constexpr MaybeIterator<T, Derived> begin()
     {
         auto& d = static_cast<Derived&>(*this);
@@ -73,7 +82,6 @@ struct MayBeIteratible
         return nullptr;
     }
 
-    constexpr MaybeConstIterator<T, Derived> end() const { return nullptr; }
     constexpr MaybeIterator<T, Derived> end() { return nullptr; }
 };
 
