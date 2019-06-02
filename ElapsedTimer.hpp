@@ -8,7 +8,7 @@ namespace rib
 /**
  * @brief Elapsed Timer
  * @par example
- * @code 
+ * @code
  * ElapsedTimer et;
  * { some proccess }
  * et.stop();
