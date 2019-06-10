@@ -14,6 +14,8 @@
 #include "Iterator/MaybeIterator.hpp"
 #include "Container/MaybeRange.hpp"
 
+#include "Utils/CompareCat.hpp"
+
 int main()
 {
     rib::Optional<int> a(1);
