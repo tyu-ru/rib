@@ -2,3 +2,4 @@
 *.gch
 html/
 *.out
+build/
