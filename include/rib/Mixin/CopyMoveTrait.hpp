@@ -46,6 +46,11 @@ DECLARE_CM_TRAIT_SPECIALIZED(F, F, F, F)
 #undef DD_false
 #undef DECLARE_CM_TRAIT_SPECIALIZED
 
+template <class Tag>
+using NonCopyableNonMovable = CopyMoveTrait<false, false, false, false, Tag>;
+template <class Tag>
+using NonCopyable = CopyMoveTrait<false, true, false, true, Tag>;
+
 static_assert(std::is_copy_constructible_v<CopyMoveTrait<true, true, true, true, int>>);
 static_assert(!std::is_copy_constructible_v<CopyMoveTrait<false, true, true, true, int>>);
 
