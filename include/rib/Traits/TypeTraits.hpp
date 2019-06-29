@@ -8,6 +8,17 @@ namespace rib::trait
 
 /**
  * @brief
+ * c++20 std::type_identity
+ * @tparam T
+ */
+template <class T>
+struct identity
+{
+    using type = T;
+};
+
+/**
+ * @brief
  * @tparam lass
  */
 template <class>
