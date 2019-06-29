@@ -35,7 +35,8 @@ inline constexpr Unexpect_tag unexpect_tag_v{};
  * @tparam E Err (require destructible)
  */
 template <class T, class E, trait::concept_t<std::is_destructible_v<T> && std::is_destructible_v<E>> = nullptr>
-class [[nodiscard]] Expected {
+class[[nodiscard]] Expected : mixin::CopyMoveTraitInherit<Expected<T, E>, T, E>
+{
     struct Ok
     {
         T v;

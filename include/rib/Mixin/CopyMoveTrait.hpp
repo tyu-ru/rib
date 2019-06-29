@@ -54,6 +54,12 @@ using NonCopyable = CopyMoveTrait<false, true, false, true, Tag>;
 static_assert(std::is_copy_constructible_v<CopyMoveTrait<true, true, true, true, int>>);
 static_assert(!std::is_copy_constructible_v<CopyMoveTrait<false, true, true, true, int>>);
 
+template <class Tag, class... Args>
+using CopyMoveTraitInherit = CopyMoveTrait<(std::is_copy_constructible_v<Args> && ...),
+                                           (std::is_move_constructible_v<Args> && ...),
+                                           (std::is_copy_assignable_v<Args> && ...),
+                                           (std::is_move_assignable_v<Args> && ...), Tag>;
+
 static_assert([] {
     struct A : private CopyMoveTrait<false, false, false, false, int>
     {

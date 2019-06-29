@@ -33,25 +33,25 @@ TEMPLATE_LIST_TEST_CASE("Expected constructivle trait", "[Container]", TestTypeL
 
 TEST_CASE("Expected copy-move trait", "[Container]")
 {
-    // SECTION("non-copy non-move")
-    // {
-    //     using A1 = Expected<int, mixin::NonCopyableNonMovable<void>>;
-    //     using A2 = Expected<mixin::NonCopyableNonMovable<void>, int>;
-    //     CHECK_FALSE(std::is_copy_assignable_v<A1>);
-    //     CHECK_FALSE(std::is_move_assignable_v<A1>);
-    //     CHECK_FALSE(std::is_copy_assignable_v<A2>);
-    //     CHECK_FALSE(std::is_move_assignable_v<A2>);
-    // }
+    SECTION("non-copy non-move")
+    {
+        using A1 = Expected<int, mixin::NonCopyableNonMovable<void>>;
+        using A2 = Expected<mixin::NonCopyableNonMovable<void>, int>;
+        CHECK_FALSE(std::is_copy_assignable_v<A1>);
+        CHECK_FALSE(std::is_move_assignable_v<A1>);
+        CHECK_FALSE(std::is_copy_assignable_v<A2>);
+        CHECK_FALSE(std::is_move_assignable_v<A2>);
+    }
 
-    // SECTION("non-copy movable")
-    // {
-    //     using B1 = Expected<int, mixin::NonCopyable<void>>;
-    //     using B2 = Expected<mixin::NonCopyable<void>, int>;
-    //     CHECK(std::is_copy_assignable_v<B1>);
-    //     CHECK_FALSE(std::is_move_assignable_v<B1>);
-    //     CHECK(std::is_copy_assignable_v<B2>);
-    //     CHECK_FALSE(std::is_move_assignable_v<B2>);
-    // }
+    SECTION("non-copy movable")
+    {
+        using B1 = Expected<int, mixin::NonCopyable<void>>;
+        using B2 = Expected<mixin::NonCopyable<void>, int>;
+        CHECK_FALSE(std::is_copy_assignable_v<B1>);
+        CHECK(std::is_move_assignable_v<B1>);
+        CHECK_FALSE(std::is_copy_assignable_v<B2>);
+        CHECK(std::is_move_assignable_v<B2>);
+    }
 }
 
 TEST_CASE("Expected construction & access", "[Container]")
