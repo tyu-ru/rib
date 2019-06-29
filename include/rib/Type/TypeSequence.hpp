@@ -342,6 +342,15 @@ static_assert(TypeSequence<int, int>::unique_v == false);
 /// concatenate sequences.
 template <class...>
 struct TypeSequence_cat;
+template <>
+struct TypeSequence_cat<> {
+    using type = TypeSequence<>;
+};
+template <class ...Args>
+struct TypeSequence_cat<TypeSequence<Args...>>
+{
+    using type = TypeSequence<Args...>;
+};
 template <class... Args1, class... Args2>
 struct TypeSequence_cat<TypeSequence<Args1...>, TypeSequence<Args2...>>
 {
@@ -355,6 +364,10 @@ struct TypeSequence_cat<TypeSequence<Args1...>, TypeSequence<Args2...>, TypeSequ
 template <class... TypeSequences>
 using TypeSequence_cat_t = typename TypeSequence_cat<TypeSequences...>::type;
 
+static_assert(std::is_same_v<TypeSequence_cat_t<>,
+                             TypeSequence<>>);
+static_assert(std::is_same_v<TypeSequence_cat_t<TypeSequence<int>>,
+                             TypeSequence<int>>);
 static_assert(std::is_same_v<TypeSequence_cat_t<TypeSequence<>, TypeSequence<char>>,
                              TypeSequence<char>>);
 static_assert(std::is_same_v<TypeSequence_cat_t<TypeSequence<int>, TypeSequence<int, char>>,
