@@ -6,6 +6,7 @@
 
 #include "../Traits/TypeTraits.hpp"
 #include "../Traits/FuncTraits.hpp"
+#include "../Mixin/CopyMoveTrait.hpp"
 
 namespace rib
 {
@@ -71,6 +72,8 @@ class [[nodiscard]] Expected {
     };
 
 public:
+    using OkType = T;
+    using ErrType = E;
     using Unwrap_t = typename unwrap_helper<T>::type;
 
 public:
@@ -278,24 +281,28 @@ public:
     }
 
     /// equally compare
-    friend constexpr bool operator==(const Expected& lhs, const Unexpected<E>& rhs) noexcept
+    template <class X>
+    friend constexpr bool operator==(const Expected& lhs, const Unexpected<X>& rhs) noexcept
     {
         if (!lhs) return lhs.error() == rhs.value();
         return false;
     }
     /// unequally compare
-    friend constexpr bool operator!=(const Expected& lhs, const Unexpected<E>& rhs) noexcept
+    template <class X>
+    friend constexpr bool operator!=(const Expected& lhs, const Unexpected<X>& rhs) noexcept
     {
         return !(lhs == rhs);
     }
     /// equally compare
-    friend constexpr bool operator==(const Unexpected<E>& lhs, const Expected& rhs) noexcept
+    template <class X>
+    friend constexpr bool operator==(const Unexpected<X>& lhs, const Expected& rhs) noexcept
     {
         if (!rhs) return lhs.value() == rhs.error();
         return false;
     }
     /// unequally compare
-    friend constexpr bool operator!=(const Unexpected<E>& lhs, const Expected& rhs) noexcept
+    template <class X>
+    friend constexpr bool operator!=(const Unexpected<X>& lhs, const Expected& rhs) noexcept
     {
         return !(lhs == rhs);
     }
@@ -427,27 +434,27 @@ public:
      * @brief mach
      * int x = expected.mach<int>(ok_func, err_func);
      * @tparam R return type
-     * @param f_ok ok
-     * @param f_err err
-     * @return std::common_type_t<decltype(f_ok(value())), decltype(f_err(error()))>
+     * @param fn_ok ok
+     * @param fn_err err
+     * @return std::common_type_t<decltype(fn_ok(value())), decltype(fn_err(error()))>
      */
-    template <class R, class F_OK, class F_ERR>
-    constexpr R mach(F_OK && f_ok, F_ERR && f_err) const&
+    template <class R, class FN_OK, class FN_ERR>
+    constexpr R mach(FN_OK && fn_ok, FN_ERR && fn_err) const&
     {
-        if (valid()) return trait::invoke_constexpr(std::forward<F_OK>(f_ok), **this);
-        return trait::invoke_constexpr(std::forward<F_ERR>(f_err), error_noexcept());
+        if (valid()) return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok), **this);
+        return trait::invoke_constexpr(std::forward<FN_ERR>(fn_err), error_noexcept());
     }
-    template <class R, class F_OK, class F_ERR>
-    constexpr R mach(F_OK && f_ok, F_ERR && f_err)&
+    template <class R, class FN_OK, class FN_ERR>
+    constexpr R mach(FN_OK && fn_ok, FN_ERR && fn_err)&
     {
-        if (valid()) return trait::invoke_constexpr(std::forward<F_OK>(f_ok), **this);
-        return trait::invoke_constexpr(std::forward<F_ERR>(f_err), error_noexcept());
+        if (valid()) return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok), **this);
+        return trait::invoke_constexpr(std::forward<FN_ERR>(fn_err), error_noexcept());
     }
-    template <class R, class F_OK, class F_ERR>
-    constexpr R mach(F_OK && f_ok, F_ERR && f_err)&&
+    template <class R, class FN_OK, class FN_ERR>
+    constexpr R mach(FN_OK && fn_ok, FN_ERR && fn_err)&&
     {
-        if (valid()) return trait::invoke_constexpr(std::forward<F_OK>(f_ok), std::move(**this));
-        return trait::invoke_constexpr(std::forward<F_ERR>(f_err), std::move(error_noexcept()));
+        if (valid()) return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok), std::move(**this));
+        return trait::invoke_constexpr(std::forward<FN_ERR>(fn_err), std::move(error_noexcept()));
     }
 };
 
@@ -471,148 +478,6 @@ public:
     constexpr E& value() & { return payload; }
     constexpr E value() && { return std::move(payload); }
 };
-
-static_assert(!std::is_default_constructible_v<Expected<int, int>>);
-static_assert(std::is_copy_constructible_v<Expected<int, int>>);
-static_assert(std::is_move_constructible_v<Expected<int, int>>);
-
-static_assert(std::is_constructible_v<Expected<int, int>, int>);
-static_assert(std::is_constructible_v<Expected<int, int>, int>);
-static_assert(std::is_constructible_v<Expected<int, int>, Unexpected<int>>);
-static_assert(std::is_constructible_v<Expected<int, int>, Unexpected<int>&&>);
-static_assert(std::is_constructible_v<Expected<int, int>, Unexpect_tag, int>);
-
-static_assert(std::is_copy_assignable_v<Expected<int, int>>);
-static_assert(std::is_move_assignable_v<Expected<int, int>>);
-
-static_assert(std::is_assignable_v<Expected<int, long>, int>);
-static_assert(std::is_assignable_v<Expected<int, long>, Unexpected<long>>);
-
-// static_assert(std::is_same_v<Expected<int, int>::Unwrap_t, Expected<int, int>>);
-// static_assert(std::is_same_v<Expected<Expected<int, int>, int>::Unwrap_t, Expected<int, int>>);
-
-static_assert([] {
-    Expected<int, long> e = 1;
-    return e.valid() && e;
-}());
-static_assert([] {
-    Expected<int, long> e = Unexpected<long>(1);
-    return !e.valid() && !e;
-}());
-
-static_assert([] {
-    Expected<int, long> e = 1;
-    return e.value() == 1 && *e == 1;
-}());
-static_assert([] {
-    Expected<int, long> e1 = 1;
-    Expected<int, long> e2 = Unexpected<long>(1);
-    return e1.value_or(2) == 1 && e2.value_or(2) == 2;
-}());
-static_assert([] {
-    Expected<int, long> e1 = 1;
-    Expected<int, long> e2 = Unexpected<long>(1);
-    return e1.value_or_default() == 1 && e2.value_or_default() == 0;
-}());
-static_assert([] {
-    struct A
-    {
-        int a;
-    };
-    Expected<A, long> e = A{1};
-    return e->a == 1;
-}());
-
-static_assert([] {
-    return Expected<int, long>(Unexpected(1)).error() == 1 &&
-           Expected<int, long>(unexpect_tag_v, 1).error() == 1;
-}());
-
-static_assert([] {
-    return Expected<int, int>(Expected<int, int>{Unexpected(1)}.unexpected()).error() == 1;
-}());
-
-static_assert(std::is_same_v<decltype(std::declval<Expected<int, long>>().optional()), std::optional<int>>);
-
-static_assert([] {
-    return Expected<int, int>(1).optional() == 1 &&
-           Expected<int, int>(Unexpected(1)).optional() == std::nullopt;
-}());
-
-static_assert([] {
-    return Expected<int, int>(1) == Expected<int, int>(1) &&
-           Expected<int, int>(1) != Expected<int, int>(Unexpected(1)) &&
-           Expected<int, int>(Unexpected(1)) == Expected<int, int>(Unexpected(1));
-}());
-static_assert([] {
-    return Expected<int, int>(1) == 1 &&
-           Expected<int, int>(Unexpected(1)) != 1 &&
-           Expected<int, int>(1) != Unexpected(1) &&
-           Expected<int, int>(Unexpected(1)) == Unexpected(1);
-}());
-static_assert([] {
-    return 1 == Expected<int, int>(1) &&
-           1 != Expected<int, int>(Unexpected(1)) &&
-           Unexpected(1) != Expected<int, int>(1) &&
-           Unexpected(1) == Expected<int, int>(Unexpected(1));
-}());
-
-static_assert(std::is_same_v<decltype(std::declval<Expected<int, long>>().map(std::declval<double(int)>())),
-                             Expected<double, long>>);
-static_assert([] {
-    auto lmd = [](int x) { return x + 1; };
-    return Expected<int, int>(1).map(lmd) == 2 &&
-           Expected<int, int>(Unexpected(1)).map(lmd) == Unexpected(1);
-}());
-
-// static_assert(std::is_same_v<decltype(std::declval<Expected<int, long>>().bind(std::declval<Expected<double, long>(int)>())),
-//                              Expected<double, long>>);
-// static_assert([] {
-//     auto lmd = [](int x) -> Expected<int, int> { if (x == 1) return x + 1; return Unexpected(2); };
-//     return Expected<int, int>(1).bind(lmd) == 2 &&
-//            Expected<int, int>(2).bind(lmd) == Unexpected(2) &&
-//            Expected<int, int>(Unexpected(1)).bind(lmd) == Unexpected(1);
-// }());
-
-// static_assert(std::is_same_v<decltype(std::declval<Expected<int, long>>().then(std::declval<Expected<double, float>(Expected<int, long>)>())),
-//                              Expected<double, float>>);
-// static_assert(std::is_same_v<decltype(std::declval<Expected<int, long>>().then(std::declval<double(Expected<int, long>)>())),
-//                              Expected<double, long>>);
-// static_assert([] {
-//     auto lmd1 = [](Expected<int, int>) { return 'a'; };
-//     auto lmd2 = [](Expected<int, int>) { return Expected<long, int>(2); };
-//     return Expected<int, int>(1).then(lmd1) == 'a' &&
-//            Expected<int, int>(Unexpected(1)).then(lmd1) == 'a' &&
-//            Expected<int, int>(1).then(lmd2) == 2 &&
-//            Expected<int, int>(Unexpected(1)).then(lmd2) == 2;
-// }());
-
-static_assert(std::is_same_v<decltype(std::declval<Expected<int, int>>().catch_error(std::declval<int(int)>())),
-                             Expected<int, int>>);
-static_assert([] {
-    auto lmd = [](int x) { return x + 1; };
-    return Expected<int, int>(1).catch_error(lmd) == 1 &&
-           Expected<int, int>(Unexpected(2)).catch_error(lmd) == 3;
-}());
-
-static_assert(std::is_same_v<decltype(std::declval<Expected<int, long>>().emap(std::declval<int(long)>())),
-                             Expected<int, int>>);
-static_assert([] {
-    auto lmd = [](int x) { return x + 1; };
-    return Expected<int, int>(1).emap(lmd) == 1 &&
-           Expected<int, int>(Unexpected(2)).emap(lmd).error() == 3;
-}());
-
-static_assert(std::is_same_v<decltype(std::declval<Expected<int, int>>().mach<int>(std::declval<double(int)>(), std::declval<float(int)>())),
-                             int>);
-static_assert(std::is_same_v<decltype(std::declval<Expected<int, int>>().mach<void>(std::declval<void(int)>(), std::declval<float(int)>())),
-                             void>);
-
-static_assert([] {
-    auto lmd1 = [](int x) { return x + 1; };
-    auto lmd2 = [](int x) { return x + 2; };
-    return Expected<int, int>(1).mach<int>(lmd1, lmd2) == 2 &&
-           Expected<int, int>(Unexpected(1)).mach<int>(lmd1, lmd2) == 3;
-}());
+Unexpected(const char[])->Unexpected<const char*>;
 
 } // namespace rib
