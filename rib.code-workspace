@@ -46,7 +46,22 @@
 			"ratio": "cpp",
 			"cstring": "cpp",
 			"ctime": "cpp",
-			"iostream": "cpp"
+			"iostream": "cpp",
+			"atomic": "cpp",
+			"bitset": "cpp",
+			"condition_variable": "cpp",
+			"future": "cpp",
+			"iomanip": "cpp",
+			"mutex": "cpp",
+			"numeric": "cpp",
+			"thread": "cpp",
+			"bit": "cpp",
+			"map": "cpp",
+			"set": "cpp",
+			"memory_resource": "cpp",
+			"regex": "cpp",
+			"shared_mutex": "cpp",
+			"string": "cpp"
 		},
 		"C_Cpp.default.cppStandard": "c++17",
 		"C_Cpp.default.cStandard": "c11"
