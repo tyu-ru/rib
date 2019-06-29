@@ -20,13 +20,13 @@ struct BadExpectedAccess
 };
 
 template <class E>
-class Unexpected;
+class Unexpect;
 
-struct Unexpect_tag
+struct UnexpectTag
 {
-    explicit Unexpect_tag() = default;
+    explicit UnexpectTag() = default;
 };
-inline constexpr Unexpect_tag unexpect_tag_v{};
+inline constexpr UnexpectTag unexpect_tag_v{};
 
 /**
  * @brief Expected value
@@ -92,15 +92,15 @@ public:
 
     /// construct by err value
     template <class F, trait::concept_t<std::is_constructible_v<E, F>> = nullptr>
-    constexpr Expected(const Unexpected<F>& err) noexcept(std::is_nothrow_constructible_v<E, F>)
+    constexpr Expected(const Unexpect<F>& err) noexcept(std::is_nothrow_constructible_v<E, F>)
         : payload(std::in_place_type<Err>, err.value()) {}
     /// construct by err value
     template <class F, trait::concept_t<std::is_constructible_v<E, F>> = nullptr>
-    constexpr Expected(Unexpected<F> && err) noexcept(std::is_nothrow_constructible_v<E, F&&>)
+    constexpr Expected(Unexpect<F> && err) noexcept(std::is_nothrow_constructible_v<E, F&&>)
         : payload(std::in_place_type<Err>, std::move(err.value())) {}
     /// construct by err value
     template <class... Args, trait::concept_t<std::is_constructible_v<E, Args&&...>> = nullptr>
-    constexpr Expected(Unexpect_tag, Args && ... args) noexcept(std::is_nothrow_constructible_v<E, Args&&...>)
+    constexpr Expected(UnexpectTag, Args && ... args) noexcept(std::is_nothrow_constructible_v<E, Args&&...>)
         : payload(std::in_place_type<Err>, std::forward<Args>(args)...) {}
 
     /// copy assign
@@ -217,15 +217,15 @@ public:
         return std::move(std::get<Err>(payload).v);
     }
 
-    /// regenerate Unexpected
-    constexpr Unexpected<E> unexpected() const& noexcept(false)
+    /// regenerate Unexpect
+    constexpr Unexpect<E> unexpected() const& noexcept(false)
     {
-        return Unexpected(error());
+        return Unexpect(error());
     }
-    /// regenerate Unexpected
-    constexpr Unexpected<E> unexpected() && noexcept(false)
+    /// regenerate Unexpect
+    constexpr Unexpect<E> unexpected() && noexcept(false)
     {
-        return Unexpected(std::move(error()));
+        return Unexpect(std::move(error()));
     }
 
     /// optional<T>
@@ -283,27 +283,27 @@ public:
 
     /// equally compare
     template <class X>
-    friend constexpr bool operator==(const Expected& lhs, const Unexpected<X>& rhs) noexcept
+    friend constexpr bool operator==(const Expected& lhs, const Unexpect<X>& rhs) noexcept
     {
         if (!lhs) return lhs.error() == rhs.value();
         return false;
     }
     /// unequally compare
     template <class X>
-    friend constexpr bool operator!=(const Expected& lhs, const Unexpected<X>& rhs) noexcept
+    friend constexpr bool operator!=(const Expected& lhs, const Unexpect<X>& rhs) noexcept
     {
         return !(lhs == rhs);
     }
     /// equally compare
     template <class X>
-    friend constexpr bool operator==(const Unexpected<X>& lhs, const Expected& rhs) noexcept
+    friend constexpr bool operator==(const Unexpect<X>& lhs, const Expected& rhs) noexcept
     {
         if (!rhs) return lhs.value() == rhs.error();
         return false;
     }
     /// unequally compare
     template <class X>
-    friend constexpr bool operator!=(const Unexpected<X>& lhs, const Expected& rhs) noexcept
+    friend constexpr bool operator!=(const Unexpect<X>& lhs, const Expected& rhs) noexcept
     {
         return !(lhs == rhs);
     }
@@ -464,21 +464,21 @@ public:
  * @tparam E
  */
 template <class E>
-class Unexpected
+class Unexpect
 {
     E payload;
 
 public:
-    constexpr Unexpected(const E& e) : payload(e) {}
-    constexpr Unexpected(E&& e) : payload(std::move(e)) {}
+    constexpr Unexpect(const E& e) : payload(e) {}
+    constexpr Unexpect(E&& e) : payload(std::move(e)) {}
 
     template <class... Args>
-    constexpr Unexpected(Args&&... args) : payload(std::forward<Args>(args)...) {}
+    constexpr Unexpect(Args&&... args) : payload(std::forward<Args>(args)...) {}
 
     constexpr const E& value() const& { return payload; }
     constexpr E& value() & { return payload; }
     constexpr E value() && { return std::move(payload); }
 };
-Unexpected(const char[])->Unexpected<const char*>;
+Unexpect(const char[])->Unexpect<const char*>;
 
 } // namespace rib

@@ -20,15 +20,15 @@ TEMPLATE_LIST_TEST_CASE("Expected constructivle trait", "[Container]", TestTypeL
 
     CHECK(std::is_constructible_v<Exp, Ok>);
     CHECK(std::is_constructible_v<Exp, Ok&&>);
-    CHECK(std::is_constructible_v<Exp, Unexpected<Err>>);
-    CHECK(std::is_constructible_v<Exp, Unexpected<Err>&&>);
-    CHECK(std::is_constructible_v<Exp, Unexpect_tag, Err>);
+    CHECK(std::is_constructible_v<Exp, Unexpect<Err>>);
+    CHECK(std::is_constructible_v<Exp, Unexpect<Err>&&>);
+    CHECK(std::is_constructible_v<Exp, UnexpectTag, Err>);
 
     CHECK(std::is_copy_assignable_v<Exp>);
     CHECK(std::is_move_assignable_v<Exp>);
 
     CHECK(std::is_assignable_v<Exp, Ok>);
-    CHECK(std::is_assignable_v<Exp, Unexpected<Err>>);
+    CHECK(std::is_assignable_v<Exp, Unexpect<Err>>);
 }
 
 TEST_CASE("Expected copy-move trait", "[Container]")
@@ -72,9 +72,9 @@ TEST_CASE("Expected construction & access", "[Container]")
         CHECK(e.value_or(0) == 1);
         CHECK(e.value_or_default() == 1);
     }
-    SECTION("Unexpected")
+    SECTION("Unexpect")
     {
-        Expected<int, int> e = Unexpected(1);
+        Expected<int, int> e = Unexpect(1);
         REQUIRE_FALSE(e);
         REQUIRE(!e);
         REQUIRE_FALSE(e.valid());
@@ -88,7 +88,7 @@ TEST_CASE("Expected construction & access", "[Container]")
         CHECK(e.value_or(0) == 0);
         CHECK(e.value_or_default() == 0);
     }
-    SECTION("Unexpected-tag")
+    SECTION("Unexpect-tag")
     {
         Expected<int, int> e(unexpect_tag_v, 1);
         REQUIRE_FALSE(e);
@@ -107,13 +107,13 @@ TEST_CASE("Expected construction & access", "[Container]")
 
 TEST_CASE("Expected assign", "[container]")
 {
-    Expected<int, int> e = Unexpected(1);
+    Expected<int, int> e = Unexpect(1);
 
     e = 1;
     REQUIRE(e.valid());
     CHECK(e == 1);
 
-    e = Unexpected(2);
+    e = Unexpect(2);
     REQUIRE(!e);
     CHECK(e.error() == 2);
 }
@@ -123,14 +123,14 @@ TEST_CASE("Expected to optional", "[container]")
     Expected<int, int> e = 1;
     CHECK(std::is_same_v<decltype(e.optional()), std::optional<int>>);
     CHECK(e.optional() == 1);
-    e = Unexpected(1);
+    e = Unexpect(1);
     CHECK(e.optional() == std::nullopt);
 }
 
-TEST_CASE("Expected to Unexpected", "[container]")
+TEST_CASE("Expected to Unexpect", "[container]")
 {
     Expected<int, int> e1 = 1;
-    Expected<int, int> e2 = Unexpected(1);
+    Expected<int, int> e2 = Unexpect(1);
 
     CHECK_THROWS_AS(e1.unexpected(), BadExpectedAccess);
     CHECK(e2.unexpected().value() == 1);
@@ -142,7 +142,7 @@ TEST_CASE("Expected to Unexpected", "[container]")
 TEST_CASE("Expected equal compare", "[container]")
 {
     Expected<int, int> e1 = 1, e2 = 2;
-    Expected<int, int> u1 = Unexpected(1), u2 = Unexpected(2);
+    Expected<int, int> u1 = Unexpect(1), u2 = Unexpect(2);
 
     SECTION("Expected fellow")
     {
@@ -152,15 +152,15 @@ TEST_CASE("Expected equal compare", "[container]")
         CHECK(u1 == u1);
         CHECK(u1 != u2);
     }
-    SECTION("Expected vs Unexpected")
+    SECTION("Expected vs Unexpect")
     {
-        CHECK(e1 != Unexpected(1));
-        CHECK(u1 == Unexpected(1));
-        CHECK(u2 != Unexpected(1));
+        CHECK(e1 != Unexpect(1));
+        CHECK(u1 == Unexpect(1));
+        CHECK(u2 != Unexpect(1));
 
-        CHECK(Unexpected<int>(1) != e1);
-        CHECK(Unexpected<int>(1) == u1);
-        CHECK(Unexpected<int>(1) != u2);
+        CHECK(Unexpect<int>(1) != e1);
+        CHECK(Unexpect<int>(1) == u1);
+        CHECK(Unexpect<int>(1) != u2);
     }
     SECTION("Expected vs normal value")
     {
@@ -176,24 +176,24 @@ TEST_CASE("Expected equal compare", "[container]")
 
 TEST_CASE("Expect monad - map", "[container]")
 {
-    Expected<int, long> e1 = 1, e2 = Unexpected(1);
+    Expected<int, long> e1 = 1, e2 = Unexpect(1);
     auto lmd = [](int x) { return std::to_string(x); };
     REQUIRE(std::is_same_v<decltype(e1.map(lmd)), Expected<std::string, long>>);
 
     CHECK(e1.map(lmd) == "1");
-    CHECK(e2.map(lmd) == Unexpected(1));
+    CHECK(e2.map(lmd) == Unexpect(1));
 }
 
 TEST_CASE("Expect monad - bind", "[container]")
 {
-    Expected<int, long> e1 = 1, e2 = 2, e3 = Unexpected(1);
-    auto lmd = [](int x) -> Expected<std::string, long> { if (x == 1) return std::to_string(x + 1); return Unexpected(2); };
+    // Expected<int, long> e1 = 1, e2 = 2, e3 = Unexpect(1);
+    // auto lmd = [](int x) -> Expected<std::string, long> { if (x == 1) return std::to_string(x + 1); return Unexpect(2); };
     // REQUIRE(std::is_same_v<decltype(e1.bind(lmd)), Expected<std::string, int>>);
 
     // static_assert([] {
     //     return Expected<int, int>(1).bind(lmd) == 2 &&
-    //            Expected<int, int>(2).bind(lmd) == Unexpected(2) &&
-    //            Expected<int, int>(Unexpected(1)).bind(lmd) == Unexpected(1);
+    //            Expected<int, int>(2).bind(lmd) == Unexpect(2) &&
+    //            Expected<int, int>(Unexpect(1)).bind(lmd) == Unexpect(1);
     // }());
 }
 
@@ -207,15 +207,15 @@ TEST_CASE("Expect monad - then", "[container]")
     //     auto lmd1 = [](Expected<int, int>) { return 'a'; };
     //     auto lmd2 = [](Expected<int, int>) { return Expected<long, int>(2); };
     //     return Expected<int, int>(1).then(lmd1) == 'a' &&
-    //            Expected<int, int>(Unexpected(1)).then(lmd1) == 'a' &&
+    //            Expected<int, int>(Unexpect(1)).then(lmd1) == 'a' &&
     //            Expected<int, int>(1).then(lmd2) == 2 &&
-    //            Expected<int, int>(Unexpected(1)).then(lmd2) == 2;
+    //            Expected<int, int>(Unexpect(1)).then(lmd2) == 2;
     // }());
 }
 
 TEST_CASE("Expect monad - catch_error", "[container]")
 {
-    Expected<int, long> e1 = 1, e2 = Unexpected(1);
+    Expected<int, long> e1 = 1, e2 = Unexpect(1);
     auto lmd = [](int x) { return x + 1; };
 
     REQUIRE(std::is_same_v<decltype(e1.catch_error(lmd)), Expected<int, long>>);
@@ -226,7 +226,7 @@ TEST_CASE("Expect monad - catch_error", "[container]")
 
 TEST_CASE("Expect monad - emap", "[container]")
 {
-    Expected<int, long> e1 = 1, e2 = Unexpected(1);
+    Expected<int, long> e1 = 1, e2 = Unexpect(1);
     auto lmd = [](int x) { return std::to_string(x); };
 
     REQUIRE(std::is_same_v<decltype(e1.emap(lmd)), Expected<int, std::string>>);
@@ -237,7 +237,7 @@ TEST_CASE("Expect monad - emap", "[container]")
 
 TEST_CASE("Expect monad - mach", "[container]")
 {
-    Expected<int, std::string> e1 = 1, e2 = Unexpected("2");
+    Expected<int, std::string> e1 = 1, e2 = Unexpect("2");
     auto lmd1 = [](int x) { return x + 1; };
     auto lmd2 = [](std::string x) { return std::stoi(x) * 2; };
 
