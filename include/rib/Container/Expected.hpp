@@ -24,6 +24,9 @@ class Expect;
 template <class E>
 class Unexpect;
 
+template <class T, class E>
+class Expected;
+
 struct ExpectTag
 {
     explicit ExpectTag() = default;
@@ -35,13 +38,40 @@ struct UnexpectTag
 };
 inline constexpr UnexpectTag unexpect_tag_v{};
 
+namespace expected_details
+{
+
+template <class, class>
+struct is_same_value_expected : std::false_type
+{
+};
+template <class T, class E, class F>
+struct is_same_value_expected<Expected<T, E>, Expected<T, F>> : std::true_type
+{
+};
+template <class T, class U>
+static constexpr bool is_same_value_expected_v = is_same_value_expected<T, U>::value;
+
+template <class, class>
+struct is_same_error_expected : std::false_type
+{
+};
+template <class T, class U, class E>
+struct is_same_error_expected<Expected<T, E>, Expected<U, E>> : std::true_type
+{
+};
+template <class T, class U>
+static constexpr bool is_same_error_expected_v = is_same_error_expected<T, U>::value;
+
+} // namespace expected_details
+
 /**
  * @brief Expected value
  * like `Result` in `rust`
  * @tparam T Ok (require destructible)
  * @tparam E Err (require destructible)
  */
-template <class T, class E, trait::concept_t<std::is_destructible_v<T> && std::is_destructible_v<E>> = nullptr>
+template <class T, class E>
 class[[nodiscard]] Expected : mixin::CopyMoveTraitInherit<Expected<T, E>, T, E>
 {
     struct Ok
@@ -58,15 +88,6 @@ class[[nodiscard]] Expected : mixin::CopyMoveTraitInherit<Expected<T, E>, T, E>
     };
 
     std::variant<Ok, Err> payload;
-
-    template <class>
-    struct is_same_error_expected : std::false_type
-    {
-    };
-    template <class U>
-    struct is_same_error_expected<Expected<U, E>> : std::true_type
-    {
-    };
 
     template <class>
     struct unwrap_helper
@@ -387,23 +408,48 @@ public:
      * @param op T -> Expected<U, E>
      * @return Expected<U, E>
      */
-    template <class Op, trait::concept_t<is_same_error_expected<std::invoke_result_t<Op, T>>::value> = nullptr>
+    template <class Op, trait::concept_t<expected_details::is_same_error_expected_v<Expected, std::invoke_result_t<Op, T>>> = nullptr>
     constexpr auto and_then(Op && op) const&->std::invoke_result_t<Op, T>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
         return trait::invoke_constexpr(std::forward<Op>(op), **this);
     }
-    template <class Op, trait::concept_t<is_same_error_expected<std::invoke_result_t<Op, T>>::value> = nullptr>
+    template <class Op, trait::concept_t<expected_details::is_same_error_expected_v<Expected, std::invoke_result_t<Op, T>>> = nullptr>
     constexpr auto and_then(Op && op)&->std::invoke_result_t<Op, T>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
         return trait::invoke_constexpr(std::forward<Op>(op), **this);
     }
-    template <class Op, trait::concept_t<is_same_error_expected<std::invoke_result_t<Op, T>>::value> = nullptr>
+    template <class Op, trait::concept_t<expected_details::is_same_error_expected_v<Expected, std::invoke_result_t<Op, T>>> = nullptr>
     constexpr auto and_then(Op && op)&&->std::invoke_result_t<Op, T>
     {
-        if (!valid()) return {unexpect_tag_v, error_noexcept()};
+        if (!valid()) return {unexpect_tag_v, std::move(error_noexcept())};
         return trait::invoke_constexpr(std::forward<Op>(op), std::move(**this));
+    }
+
+    /**
+     * @brief or_else
+     * @details Calls op if the expected is invalid, otherwise returns the 'value()' value of self.
+     * @param op E -> Expected<T, F>
+     * @return Expected<U, E>
+     */
+    template <class Op, trait::concept_t<expected_details::is_same_value_expected_v<Expected, std::invoke_result_t<Op, E>>> = nullptr>
+    constexpr auto or_else(Op && op) const&->std::invoke_result_t<Op, E>
+    {
+        if (valid()) return {expect_tag_v, **this};
+        return trait::invoke_constexpr(std::forward<Op>(op), error_noexcept());
+    }
+    template <class Op, trait::concept_t<expected_details::is_same_value_expected_v<Expected, std::invoke_result_t<Op, E>>> = nullptr>
+    constexpr auto or_else(Op && op)&->std::invoke_result_t<Op, E>
+    {
+        if (valid()) return {expect_tag_v, **this};
+        return trait::invoke_constexpr(std::forward<Op>(op), error_noexcept());
+    }
+    template <class Op, trait::concept_t<expected_details::is_same_value_expected_v<Expected, std::invoke_result_t<Op, E>>> = nullptr>
+    constexpr auto or_else(Op && op)&&->std::invoke_result_t<Op, E>
+    {
+        if (valid()) return {expect_tag_v, std::move(**this)};
+        return trait::invoke_constexpr(std::forward<Op>(op), std::move(error_noexcept()));
     }
 
     /**

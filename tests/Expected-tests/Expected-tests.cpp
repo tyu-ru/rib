@@ -194,32 +194,48 @@ TEST_CASE("Expect monad - map", "[container]")
     Expected<int, int> e1 = 1, e2 = Unexpect(1);
     auto lmd = [](int x) { return std::to_string(x); };
 
-    REQUIRE(std::is_same_v<decltype(e1.map(lmd)), Expected<std::string, int>>);
-    REQUIRE(std::is_same_v<decltype(e1.emap(lmd)), Expected<int, std::string>>);
-
     SECTION("map")
     {
+        REQUIRE(std::is_same_v<decltype(e1.map(lmd)), Expected<std::string, int>>);
         CHECK(e1.map(lmd) == "1");
         CHECK(e2.map(lmd) == Unexpect(1));
     }
     SECTION("emap")
     {
+        REQUIRE(std::is_same_v<decltype(e1.emap(lmd)), Expected<int, std::string>>);
         CHECK(e1.emap(lmd) == 1);
         CHECK(e2.emap(lmd).error() == "1");
     }
 }
 
-TEST_CASE("Expect monad - bind", "[container]")
+TEST_CASE("Expect monad - and_then-or_else", "[container]")
 {
-    // Expected<int, long> e1 = 1, e2 = 2, e3 = Unexpect(1);
-    // auto lmd = [](int x) -> Expected<std::string, long> { if (x == 1) return std::to_string(x + 1); return Unexpect(2); };
-    // REQUIRE(std::is_same_v<decltype(e1.bind(lmd)), Expected<std::string, int>>);
+    Expected<int, int> e1 = 1, e2 = 2, e3 = Unexpect(1), e4 = Unexpect(2);
+    auto lmd1 = [](int x) -> Expected<std::string, int> {
+        if (x == 1) return std::to_string(x + 1);
+        return Unexpect(2);
+    };
+    auto lmd2 = [](int x) -> Expected<int, std::string> {
+        if (x == 1) return x + 1;
+        return Unexpect(std::to_string(x + 1));
+    };
 
-    // static_assert([] {
-    //     return Expected<int, int>(1).bind(lmd) == 2 &&
-    //            Expected<int, int>(2).bind(lmd) == Unexpect(2) &&
-    //            Expected<int, int>(Unexpect(1)).bind(lmd) == Unexpect(1);
-    // }());
+    SECTION("and_then")
+    {
+        REQUIRE(std::is_same_v<decltype(e1.and_then(lmd1)), Expected<std::string, int>>);
+        CHECK(e1.and_then(lmd1) == "2");
+        CHECK(e2.and_then(lmd1) == Unexpect(2));
+        CHECK(e3.and_then(lmd1) == Unexpect(1));
+        CHECK(e4.and_then(lmd1) == Unexpect(2));
+    }
+    SECTION("or_else")
+    {
+        REQUIRE(std::is_same_v<decltype(e1.or_else(lmd2)), Expected<int, std::string>>);
+        CHECK(e1.or_else(lmd2) == 1);
+        CHECK(e2.or_else(lmd2) == 2);
+        CHECK(e3.or_else(lmd2) == 2);
+        CHECK(e4.or_else(lmd2) == Unexpect("3"));
+    }
 }
 
 TEST_CASE("Expect monad - then", "[container]")
