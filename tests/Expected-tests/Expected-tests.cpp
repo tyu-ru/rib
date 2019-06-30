@@ -68,6 +68,7 @@ TEST_CASE("Expected construction & access", "[Container]")
 
         CHECK(e.value() == 1);
         CHECK_NOTHROW(e.value());
+        CHECK(e.value_noexcept() == 1);
         CHECK(*e == 1);
 
         CHECK_THROWS_AS(e.error(), BadExpectedAccess);

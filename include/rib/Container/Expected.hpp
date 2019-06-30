@@ -171,24 +171,31 @@ public:
     }
 
     /// value (no exception)
-    constexpr const T& operator*() const& noexcept { return std::get<Ok>(payload).v; }
+    constexpr const T& value_noexcept() const& noexcept { return std::get<Ok>(payload).v; }
     /// value (no exception)
-    constexpr T& operator*() & noexcept { return std::get<Ok>(payload).v; }
+    constexpr T& value_noexcept() & noexcept { return std::get<Ok>(payload).v; }
     /// value (no exception)
-    constexpr T operator*() && noexcept { return std::move(std::get<Ok>(payload).v); }
+    constexpr T value_noexcept() && noexcept { return std::move(std::get<Ok>(payload).v); }
+
+    /// value (no exception)
+    constexpr const T& operator*() const& noexcept { return value_noexcept(); }
+    /// value (no exception)
+    constexpr T& operator*() & noexcept { return value_noexcept(); }
+    /// value (no exception)
+    constexpr T operator*() && noexcept { return std::move(value_noexcept()); }
 
     /// if `*this` has value returns contained value, otherwise returns default_value
     template <class U>
     constexpr T value_or(U && default_value) const&
     {
-        if (valid()) return **this;
+        if (valid()) return value_noexcept();
         return static_cast<T>(std::forward<U>(default_value));
     }
     /// if *this has value returns contained value, otherwise returns default_value
     template <class U>
     constexpr T value_or(U && default_value)&&
     {
-        if (valid()) return std::move(**this);
+        if (valid()) return std::move(value_noexcept());
         return static_cast<T>(std::forward<U>(default_value));
     }
 
@@ -196,7 +203,7 @@ public:
     template <class U = T, trait::concept_t<std::is_same_v<T, U> && (std::is_default_constructible_v<T> || std::is_aggregate_v<T>)> = nullptr>
     constexpr T value_or_default() const&
     {
-        if (valid()) return **this;
+        if (valid()) return value_noexcept();
         if constexpr (std::is_aggregate_v<T>) {
             return T{};
         } else {
@@ -207,7 +214,7 @@ public:
     template <class U = T, trait::concept_t<std::is_same_v<T, U> && (std::is_default_constructible_v<T> || std::is_aggregate_v<T>)> = nullptr>
     constexpr T value_or_default()&&
     {
-        if (valid()) return std::move(**this);
+        if (valid()) return std::move(value_noexcept());
         if constexpr (std::is_aggregate_v<T>) {
             return T{};
         } else {
@@ -216,9 +223,9 @@ public:
     }
 
     /// pointer (no exception)
-    constexpr const T* operator->() noexcept { return &**this; }
+    constexpr const T* operator->() noexcept { return &value_noexcept(); }
     /// pointer (no exception)
-    constexpr T* operator->() const noexcept { return &**this; }
+    constexpr T* operator->() const noexcept { return &value_noexcept(); }
 
     /// error value (exception)
     constexpr const E& error() const& noexcept(false)
@@ -269,13 +276,13 @@ public:
     /// optional<T>
     constexpr std::optional<T> optional() const& noexcept(std::is_nothrow_copy_constructible_v<T>)
     {
-        if (valid()) return **this;
+        if (valid()) return value_noexcept();
         return std::nullopt;
     }
     /// optional<T>
     constexpr std::optional<T> optional() && noexcept(std::is_nothrow_copy_constructible_v<T>)
     {
-        if (valid()) return std::move(**this);
+        if (valid()) return std::move(value_noexcept());
         return std::nullopt;
     }
 
@@ -362,19 +369,19 @@ public:
     constexpr auto map(Op && op) const&->Expected<std::invoke_result_t<Op, T>, E>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
-        return trait::invoke_constexpr(std::forward<Op>(op), **this);
+        return trait::invoke_constexpr(std::forward<Op>(op), value_noexcept());
     }
     template <class Op>
     constexpr auto map(Op && op)&->Expected<std::invoke_result_t<Op, T>, E>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
-        return trait::invoke_constexpr(std::forward<Op>(op), **this);
+        return trait::invoke_constexpr(std::forward<Op>(op), value_noexcept());
     }
     template <class Op>
     constexpr auto map(Op && op)&&->Expected<std::invoke_result_t<Op, T>, E>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
-        return trait::invoke_constexpr(std::forward<Op>(op), std::move(**this));
+        return trait::invoke_constexpr(std::forward<Op>(op), std::move(value_noexcept()));
     }
 
     /**
@@ -386,19 +393,19 @@ public:
     template <class Op>
     constexpr auto emap(Op && op) const&->Expected<T, std::invoke_result_t<Op, E>>
     {
-        if (valid()) return **this;
+        if (valid()) return value_noexcept();
         return {unexpect_tag_v, trait::invoke_constexpr(std::forward<Op>(op), error())};
     }
     template <class Op>
     constexpr auto emap(Op && op)&->Expected<T, std::invoke_result_t<Op, E>>
     {
-        if (valid()) return **this;
+        if (valid()) return value_noexcept();
         return {unexpect_tag_v, trait::invoke_constexpr(std::forward<Op>(op), error())};
     }
     template <class Op>
     constexpr auto emap(Op && op)&&->Expected<T, std::invoke_result_t<Op, E>>
     {
-        if (valid()) return std::move(**this);
+        if (valid()) return std::move(value_noexcept());
         return {unexpect_tag_v, trait::invoke_constexpr(std::forward<Op>(op), std::move(error()))};
     }
 
@@ -412,19 +419,19 @@ public:
     constexpr auto and_then(Op && op) const&->std::invoke_result_t<Op, T>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
-        return trait::invoke_constexpr(std::forward<Op>(op), **this);
+        return trait::invoke_constexpr(std::forward<Op>(op), value_noexcept());
     }
     template <class Op, trait::concept_t<expected_details::is_same_error_expected_v<Expected, std::invoke_result_t<Op, T>>> = nullptr>
     constexpr auto and_then(Op && op)&->std::invoke_result_t<Op, T>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
-        return trait::invoke_constexpr(std::forward<Op>(op), **this);
+        return trait::invoke_constexpr(std::forward<Op>(op), value_noexcept());
     }
     template <class Op, trait::concept_t<expected_details::is_same_error_expected_v<Expected, std::invoke_result_t<Op, T>>> = nullptr>
     constexpr auto and_then(Op && op)&&->std::invoke_result_t<Op, T>
     {
         if (!valid()) return {unexpect_tag_v, std::move(error_noexcept())};
-        return trait::invoke_constexpr(std::forward<Op>(op), std::move(**this));
+        return trait::invoke_constexpr(std::forward<Op>(op), std::move(value_noexcept()));
     }
 
     /**
@@ -436,19 +443,19 @@ public:
     template <class Op, trait::concept_t<expected_details::is_same_value_expected_v<Expected, std::invoke_result_t<Op, E>>> = nullptr>
     constexpr auto or_else(Op && op) const&->std::invoke_result_t<Op, E>
     {
-        if (valid()) return {expect_tag_v, **this};
+        if (valid()) return {expect_tag_v, value_noexcept()};
         return trait::invoke_constexpr(std::forward<Op>(op), error_noexcept());
     }
     template <class Op, trait::concept_t<expected_details::is_same_value_expected_v<Expected, std::invoke_result_t<Op, E>>> = nullptr>
     constexpr auto or_else(Op && op)&->std::invoke_result_t<Op, E>
     {
-        if (valid()) return {expect_tag_v, **this};
+        if (valid()) return {expect_tag_v, value_noexcept()};
         return trait::invoke_constexpr(std::forward<Op>(op), error_noexcept());
     }
     template <class Op, trait::concept_t<expected_details::is_same_value_expected_v<Expected, std::invoke_result_t<Op, E>>> = nullptr>
     constexpr auto or_else(Op && op)&&->std::invoke_result_t<Op, E>
     {
-        if (valid()) return {expect_tag_v, std::move(**this)};
+        if (valid()) return {expect_tag_v, std::move(value_noexcept())};
         return trait::invoke_constexpr(std::forward<Op>(op), std::move(error_noexcept()));
     }
 
@@ -508,19 +515,19 @@ public:
     template <class R, class FN_OK, class FN_ERR>
     constexpr R mach(FN_OK && fn_ok, FN_ERR && fn_err) const&
     {
-        if (valid()) return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok), **this);
+        if (valid()) return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok), value_noexcept());
         return trait::invoke_constexpr(std::forward<FN_ERR>(fn_err), error_noexcept());
     }
     template <class R, class FN_OK, class FN_ERR>
     constexpr R mach(FN_OK && fn_ok, FN_ERR && fn_err)&
     {
-        if (valid()) return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok), **this);
+        if (valid()) return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok), value_noexcept());
         return trait::invoke_constexpr(std::forward<FN_ERR>(fn_err), error_noexcept());
     }
     template <class R, class FN_OK, class FN_ERR>
     constexpr R mach(FN_OK && fn_ok, FN_ERR && fn_err)&&
     {
-        if (valid()) return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok), std::move(**this));
+        if (valid()) return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok), std::move(value_noexcept()));
         return trait::invoke_constexpr(std::forward<FN_ERR>(fn_err), std::move(error_noexcept()));
     }
 };
