@@ -210,6 +210,27 @@ public:
         }
     }
 
+    template <class F>
+    constexpr T value_or_else(F && f) const&
+    {
+        if (valid()) return value_noexcept();
+        if constexpr (std::is_invocable_r_v<T, F, E>) {
+            return trait::invoke_constexpr(std::forward<F>(f), error_noexcept());
+        } else if constexpr (std::is_invocable_r_v<T, F>) {
+            return trait::invoke_constexpr(std::forward<F>(f));
+        }
+    }
+    template <class F>
+    constexpr T value_or_else(F && f)&&
+    {
+        if (valid()) return std::move(value_noexcept());
+        if constexpr (std::is_invocable_r_v<T, F, E>) {
+            return trait::invoke_constexpr(std::forward<F>(f), std::move(error_noexcept()));
+        } else if constexpr (std::is_invocable_r_v<T, F>) {
+            return trait::invoke_constexpr(std::forward<F>(f));
+        }
+    }
+
     /// pointer (no exception)
     constexpr const T* operator->() noexcept { return &value_noexcept(); }
     /// pointer (no exception)

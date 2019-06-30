@@ -75,6 +75,8 @@ TEST_CASE("Expected construction & access", "[Container]")
 
         CHECK(e.value_or(0) == 1);
         CHECK(e.value_or_default() == 1);
+        CHECK(e.value_or_else([] { return 2; }) == 1);
+        CHECK(e.value_or_else([](int err) { return err + 1; }) == 1);
     }
     SECTION("Explicit expect")
     {
@@ -103,6 +105,8 @@ TEST_CASE("Expected construction & access", "[Container]")
 
         CHECK(e.value_or(0) == 0);
         CHECK(e.value_or_default() == 0);
+        CHECK(e.value_or_else([] { return 2; }) == 2);
+        CHECK(e.value_or_else([](int err) { return err + 1; }) == 2);
     }
     SECTION("Unexpect-tag")
     {
