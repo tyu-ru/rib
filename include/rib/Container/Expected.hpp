@@ -20,9 +20,43 @@ struct BadExpectedAccess
 };
 
 template <class T>
-class Expect;
+class Expect
+{
+    template <class, class>
+    friend class Expected;
+    T payload;
+
+public:
+    constexpr Expect(const T& val) : payload(val) {}
+    constexpr Expect(T&& val) : payload(std::move(val)) {}
+
+    template <class... Args>
+    constexpr Expect(Args&&... args) : payload(std::forward<Args>(args)...) {}
+
+    constexpr const T& value() const& { return payload; }
+};
+
+/**
+ * @brief indicate unexpect value
+ * @tparam E
+ */
 template <class E>
-class Unexpect;
+class Unexpect
+{
+    template <class, class>
+    friend class Expected;
+    E payload;
+
+public:
+    constexpr Unexpect(const E& e) : payload(e) {}
+    constexpr Unexpect(E&& e) : payload(std::move(e)) {}
+
+    template <class... Args>
+    constexpr Unexpect(Args&&... args) : payload(std::forward<Args>(args)...) {}
+
+    constexpr const E& value() const& { return payload; }
+};
+Unexpect(const char[])->Unexpect<const char*>;
 
 template <class T, class E>
 class Expected;
@@ -105,12 +139,15 @@ public:
     template <class... Args, trait::concept_t<std::is_constructible_v<T, Args&&...>> = nullptr>
     constexpr Expected(Args && ... args) noexcept(std::is_nothrow_constructible_v<T, Args&&...>)
         : payload(std::in_place_type<Ok>, std::forward<Args>(args)...) {}
+
     /// construct by ok value
     template <class U, trait::concept_t<std::is_constructible_v<T, U>> = nullptr>
-    constexpr Expected(const Expect<U>& expect) : payload(std::in_place_type<Ok>, expect.value()) {}
+    constexpr Expected(const Expect<U>& expect)
+        : payload(std::in_place_type<Ok>, expect.payload) {}
     /// construct by ok value
     template <class U, trait::concept_t<std::is_constructible_v<T, U>> = nullptr>
-    constexpr Expected(Expect<U> && expect) : payload(std::in_place_type<Ok>, std::move(expect.value())) {}
+    constexpr Expected(Expect<U> && expect)
+        : payload(std::in_place_type<Ok>, std::move(expect.payload)) {}
     /// construct by ok value
     template <class... Args, trait::concept_t<std::is_constructible_v<T, Args&&...>> = nullptr>
     constexpr Expected(ExpectTag, Args && ... args)
@@ -119,11 +156,11 @@ public:
     /// construct by err value
     template <class F, trait::concept_t<std::is_constructible_v<E, F>> = nullptr>
     constexpr Expected(const Unexpect<F>& err) noexcept(std::is_nothrow_constructible_v<E, F>)
-        : payload(std::in_place_type<Err>, err.value()) {}
+        : payload(std::in_place_type<Err>, err.payload) {}
     /// construct by err value
     template <class F, trait::concept_t<std::is_constructible_v<E, F>> = nullptr>
     constexpr Expected(Unexpect<F> && err) noexcept(std::is_nothrow_constructible_v<E, F&&>)
-        : payload(std::in_place_type<Err>, std::move(err.value())) {}
+        : payload(std::in_place_type<Err>, std::move(err.payload)) {}
     /// construct by err value
     template <class... Args, trait::concept_t<std::is_constructible_v<E, Args&&...>> = nullptr>
     constexpr Expected(UnexpectTag, Args && ... args) noexcept(std::is_nothrow_constructible_v<E, Args&&...>)
@@ -480,44 +517,5 @@ public:
         return trait::invoke_constexpr(std::forward<FN_ERR>(fn_err), std::move(error_noexcept()));
     }
 };
-
-template <class T>
-class Expect
-{
-    T payload;
-
-public:
-    constexpr Expect(const T& val) : payload(val) {}
-    constexpr Expect(T&& val) : payload(std::move(val)) {}
-
-    template <class... Args>
-    constexpr Expect(Args&&... args) : payload(std::forward<Args>(args)...) {}
-
-    constexpr const T& value() const& { return payload; }
-    constexpr T& value() & { return payload; }
-    constexpr T value() && { return std::move(payload); }
-};
-
-/**
- * @brief indicate unexpect value
- * @tparam E
- */
-template <class E>
-class Unexpect
-{
-    E payload;
-
-public:
-    constexpr Unexpect(const E& e) : payload(e) {}
-    constexpr Unexpect(E&& e) : payload(std::move(e)) {}
-
-    template <class... Args>
-    constexpr Unexpect(Args&&... args) : payload(std::forward<Args>(args)...) {}
-
-    constexpr const E& value() const& { return payload; }
-    constexpr E& value() & { return payload; }
-    constexpr E value() && { return std::move(payload); }
-};
-Unexpect(const char[])->Unexpect<const char*>;
 
 } // namespace rib
