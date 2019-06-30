@@ -333,119 +333,122 @@ public:
 
     /**
      * @brief map
-     * @param f invoke(f, value())
-     * @return Expected<decltype(f(value())), E>
+     * @details Calls op if the expected is valid, otherwise returns the 'error()' value of self.
+     * @param op T -> U
+     * @return Expected<U, E>
      */
-    template <class F>
-    constexpr auto map(F && f) const&->Expected<std::invoke_result_t<F, T>, E>
+    template <class Op>
+    constexpr auto map(Op && op) const&->Expected<std::invoke_result_t<Op, T>, E>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
-        return trait::invoke_constexpr(std::forward<F>(f), **this);
+        return trait::invoke_constexpr(std::forward<Op>(op), **this);
     }
-    template <class F>
-    constexpr auto map(F && f)&->Expected<std::invoke_result_t<F, T>, E>
+    template <class Op>
+    constexpr auto map(Op && op)&->Expected<std::invoke_result_t<Op, T>, E>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
-        return trait::invoke_constexpr(std::forward<F>(f), **this);
+        return trait::invoke_constexpr(std::forward<Op>(op), **this);
     }
-    template <class F>
-    constexpr auto map(F && f)&&->Expected<std::invoke_result_t<F, T>, E>
+    template <class Op>
+    constexpr auto map(Op && op)&&->Expected<std::invoke_result_t<Op, T>, E>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
-        return trait::invoke_constexpr(std::forward<F>(f), std::move(**this));
+        return trait::invoke_constexpr(std::forward<Op>(op), std::move(**this));
     }
 
     /**
      * @brief emap
-     * @param f invoke(f, error()) -> X
-     * @return Expected<T, decltype(f(error()))>>
+     * @details Calls op if the expected is invalid, otherwise returns the 'value()' value of self.
+     * @param op E -> F
+     * @return Expected<T, F>
      */
-    template <class F>
-    constexpr auto emap(F && f) const&->Expected<T, std::invoke_result_t<F, E>>
+    template <class Op>
+    constexpr auto emap(Op && op) const&->Expected<T, std::invoke_result_t<Op, E>>
     {
         if (valid()) return **this;
-        return {unexpect_tag_v, trait::invoke_constexpr(std::forward<F>(f), error())};
+        return {unexpect_tag_v, trait::invoke_constexpr(std::forward<Op>(op), error())};
     }
-    template <class F>
-    constexpr auto emap(F && f)&->Expected<T, std::invoke_result_t<F, E>>
+    template <class Op>
+    constexpr auto emap(Op && op)&->Expected<T, std::invoke_result_t<Op, E>>
     {
         if (valid()) return **this;
-        return {unexpect_tag_v, trait::invoke_constexpr(std::forward<F>(f), error())};
+        return {unexpect_tag_v, trait::invoke_constexpr(std::forward<Op>(op), error())};
     }
-    template <class F>
-    constexpr auto emap(F && f)&&->Expected<T, std::invoke_result_t<F, E>>
+    template <class Op>
+    constexpr auto emap(Op && op)&&->Expected<T, std::invoke_result_t<Op, E>>
     {
         if (valid()) return std::move(**this);
-        return {unexpect_tag_v, trait::invoke_constexpr(std::forward<F>(f), std::move(error()))};
+        return {unexpect_tag_v, trait::invoke_constexpr(std::forward<Op>(op), std::move(error()))};
     }
 
     /**
-     * @brief bind
-     * @param f invoke(f, value()) -> Expected<U, E>
-     * @return decltype(f(value()))
+     * @brief and_then
+     * @details Calls op if the expected is valid, otherwise returns the 'error()' value of self.
+     * @param op T -> Expected<U, E>
+     * @return Expected<U, E>
      */
-    template <class F, trait::concept_t<is_same_error_expected<std::invoke_result_t<F, T>>::value> = nullptr>
-    constexpr auto bind(F && f) const&->std::invoke_result_t<F, T>
+    template <class Op, trait::concept_t<is_same_error_expected<std::invoke_result_t<Op, T>>::value> = nullptr>
+    constexpr auto and_then(Op && op) const&->std::invoke_result_t<Op, T>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
-        return trait::invoke_constexpr(std::forward<F>(f), **this);
+        return trait::invoke_constexpr(std::forward<Op>(op), **this);
     }
-    template <class F, trait::concept_t<is_same_error_expected<std::invoke_result_t<F, T>>::value> = nullptr>
-    constexpr auto bind(F && f)&->std::invoke_result_t<F, T>
+    template <class Op, trait::concept_t<is_same_error_expected<std::invoke_result_t<Op, T>>::value> = nullptr>
+    constexpr auto and_then(Op && op)&->std::invoke_result_t<Op, T>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
-        return trait::invoke_constexpr(std::forward<F>(f), **this);
+        return trait::invoke_constexpr(std::forward<Op>(op), **this);
     }
-    template <class F, trait::concept_t<is_same_error_expected<std::invoke_result_t<F, T>>::value> = nullptr>
-    constexpr auto bind(F && f)&&->std::invoke_result_t<F, T>
+    template <class Op, trait::concept_t<is_same_error_expected<std::invoke_result_t<Op, T>>::value> = nullptr>
+    constexpr auto and_then(Op && op)&&->std::invoke_result_t<Op, T>
     {
         if (!valid()) return {unexpect_tag_v, error_noexcept()};
-        return trait::invoke_constexpr(std::forward<F>(f), std::move(**this));
+        return trait::invoke_constexpr(std::forward<Op>(op), std::move(**this));
     }
 
     /**
      * @brief then
-     * @param f invoke(f, *this) -> {Expected<U, X> or U}
-     * @return if f returns Expected then f(*this) otherwise Expected<f(*this), E>
+     * @param op invoke(op, *this) -> {Expected<U, F> or U}
+     * @return if op returns Expected then op(*this) otherwise Expected<op(*this), F>
      */
-    template <class F>
-    constexpr auto then(F && f) const&->typename Expected<std::invoke_result_t<F, Expected>, E>::Unwrap_t
+    template <class Op>
+    constexpr auto then(Op && op) const&->typename Expected<std::invoke_result_t<Op, Expected>, E>::Unwrap_t
     {
-        return trait::invoke_constexpr(std::forward<F>(f), *this);
+        return trait::invoke_constexpr(std::forward<Op>(op), *this);
     }
-    template <class F>
-    constexpr auto then(F && f)&->typename Expected<std::invoke_result_t<F, Expected>, E>::Unwrap_t
+    template <class Op>
+    constexpr auto then(Op && op)&->typename Expected<std::invoke_result_t<Op, Expected>, E>::Unwrap_t
     {
-        return trait::invoke_constexpr(std::forward<F>(f), *this);
+        return trait::invoke_constexpr(std::forward<Op>(op), *this);
     }
-    template <class F>
-    constexpr auto then(F && f)&&->typename Expected<std::invoke_result_t<F, Expected>, E>::Unwrap_t
+    template <class Op>
+    constexpr auto then(Op && op)&&->typename Expected<std::invoke_result_t<Op, Expected>, E>::Unwrap_t
     {
-        return trait::invoke_constexpr(std::forward<F>(f), std::move(*this));
+        return trait::invoke_constexpr(std::forward<Op>(op), std::move(*this));
     }
 
     /**
      * @brief catch_error
-     * @param f invoke(f, error()) -> T
+     * @param op invoke(op, error()) -> T
      * @return Expected<T, E>
      */
-    template <class F>
-    constexpr Expected catch_error(F && f) const&
+    template <class Op>
+    constexpr Expected catch_error(Op && op) const&
     {
         if (valid()) return *this;
-        return trait::invoke_constexpr(std::forward<F>(f), error_noexcept());
+        return trait::invoke_constexpr(std::forward<Op>(op), error_noexcept());
     }
-    template <class F>
-    constexpr Expected catch_error(F && f)&
+    template <class Op>
+    constexpr Expected catch_error(Op && op)&
     {
         if (valid()) return *this;
-        return trait::invoke_constexpr(std::forward<F>(f), error_noexcept());
+        return trait::invoke_constexpr(std::forward<Op>(op), error_noexcept());
     }
-    template <class F>
-    constexpr Expected catch_error(F && f)&&
+    template <class Op>
+    constexpr Expected catch_error(Op && op)&&
     {
         if (valid()) return std::move(*this);
-        return trait::invoke_constexpr(std::forward<F>(f), std::move(error_noexcept()));
+        return trait::invoke_constexpr(std::forward<Op>(op), std::move(error_noexcept()));
     }
 
     /**
