@@ -176,12 +176,22 @@ TEST_CASE("Expected equal compare", "[container]")
 
 TEST_CASE("Expect monad - map", "[container]")
 {
-    Expected<int, long> e1 = 1, e2 = Unexpect(1);
+    Expected<int, int> e1 = 1, e2 = Unexpect(1);
     auto lmd = [](int x) { return std::to_string(x); };
-    REQUIRE(std::is_same_v<decltype(e1.map(lmd)), Expected<std::string, long>>);
 
-    CHECK(e1.map(lmd) == "1");
-    CHECK(e2.map(lmd) == Unexpect(1));
+    REQUIRE(std::is_same_v<decltype(e1.map(lmd)), Expected<std::string, int>>);
+    REQUIRE(std::is_same_v<decltype(e1.emap(lmd)), Expected<int, std::string>>);
+
+    SECTION("map")
+    {
+        CHECK(e1.map(lmd) == "1");
+        CHECK(e2.map(lmd) == Unexpect(1));
+    }
+    SECTION("emap")
+    {
+        CHECK(e1.emap(lmd) == 1);
+        CHECK(e2.emap(lmd).error() == "1");
+    }
 }
 
 TEST_CASE("Expect monad - bind", "[container]")
@@ -222,17 +232,6 @@ TEST_CASE("Expect monad - catch_error", "[container]")
 
     CHECK(e1.catch_error(lmd) == 1);
     CHECK(e2.catch_error(lmd) == 2);
-}
-
-TEST_CASE("Expect monad - emap", "[container]")
-{
-    Expected<int, long> e1 = 1, e2 = Unexpect(1);
-    auto lmd = [](int x) { return std::to_string(x); };
-
-    REQUIRE(std::is_same_v<decltype(e1.emap(lmd)), Expected<int, std::string>>);
-
-    CHECK(e1.emap(lmd) == 1);
-    CHECK(e2.emap(lmd).error() == "1");
 }
 
 TEST_CASE("Expect monad - mach", "[container]")

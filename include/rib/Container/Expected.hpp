@@ -339,6 +339,30 @@ public:
     }
 
     /**
+     * @brief emap
+     * @param f invoke(f, error()) -> X
+     * @return Expected<T, decltype(f(error()))>>
+     */
+    template <class F>
+    constexpr auto emap(F && f) const&->Expected<T, std::invoke_result_t<F, E>>
+    {
+        if (valid()) return **this;
+        return {unexpect_tag_v, trait::invoke_constexpr(std::forward<F>(f), error())};
+    }
+    template <class F>
+    constexpr auto emap(F && f)&->Expected<T, std::invoke_result_t<F, E>>
+    {
+        if (valid()) return **this;
+        return {unexpect_tag_v, trait::invoke_constexpr(std::forward<F>(f), error())};
+    }
+    template <class F>
+    constexpr auto emap(F && f)&&->Expected<T, std::invoke_result_t<F, E>>
+    {
+        if (valid()) return std::move(**this);
+        return {unexpect_tag_v, trait::invoke_constexpr(std::forward<F>(f), std::move(error()))};
+    }
+
+    /**
      * @brief bind
      * @param f invoke(f, value()) -> Expected<U, E>
      * @return decltype(f(value()))
@@ -405,30 +429,6 @@ public:
     {
         if (valid()) return std::move(*this);
         return trait::invoke_constexpr(std::forward<F>(f), std::move(error_noexcept()));
-    }
-
-    /**
-     * @brief emap
-     * @param f invoke(f, error()) -> X
-     * @return Expected<T, decltype(f(error()))>>
-     */
-    template <class F>
-    constexpr auto emap(F && f) const&->Expected<T, std::invoke_result_t<F, E>>
-    {
-        if (valid()) return **this;
-        return {unexpect_tag_v, trait::invoke_constexpr(std::forward<F>(f), error())};
-    }
-    template <class F>
-    constexpr auto emap(F && f)&->Expected<T, std::invoke_result_t<F, E>>
-    {
-        if (valid()) return **this;
-        return {unexpect_tag_v, trait::invoke_constexpr(std::forward<F>(f), error())};
-    }
-    template <class F>
-    constexpr auto emap(F && f)&&->Expected<T, std::invoke_result_t<F, E>>
-    {
-        if (valid()) return std::move(**this);
-        return {unexpect_tag_v, trait::invoke_constexpr(std::forward<F>(f), std::move(error()))};
     }
 
     /**
