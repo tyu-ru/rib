@@ -89,21 +89,9 @@ class[[nodiscard]] Expected : mixin::CopyMoveTraitInherit<Expected<T, E>, T, E>
 
     std::variant<Ok, Err> payload;
 
-    template <class>
-    struct unwrap_helper
-    {
-        using type = Expected;
-    };
-    template <class U, class F>
-    struct unwrap_helper<Expected<U, F>>
-    {
-        using type = Expected<U, F>;
-    };
-
 public:
     using OkType = T;
     using ErrType = E;
-    using Unwrap_t = typename unwrap_helper<T>::type;
 
 public:
     /// [deleted] default constructor
@@ -151,31 +139,31 @@ public:
     /// has ok value
     constexpr operator bool() const noexcept { return valid(); }
 
-    /// value (exception)
-    constexpr const T& value() const& noexcept(false)
-    {
-        if (!valid()) throw BadExpectedAccess{};
-        return std::get<Ok>(payload).v;
-    }
-    /// value (exception)
-    constexpr T& value() & noexcept(false)
-    {
-        if (!valid()) throw BadExpectedAccess{};
-        return std::get<Ok>(payload).v;
-    }
-    /// value (exception)
-    constexpr T value() && noexcept(false)
-    {
-        if (!valid()) throw BadExpectedAccess{};
-        return std::move(std::get<Ok>(payload).v);
-    }
-
     /// value (no exception)
     constexpr const T& value_noexcept() const& noexcept { return std::get<Ok>(payload).v; }
     /// value (no exception)
     constexpr T& value_noexcept() & noexcept { return std::get<Ok>(payload).v; }
     /// value (no exception)
     constexpr T value_noexcept() && noexcept { return std::move(std::get<Ok>(payload).v); }
+
+    /// value (exception)
+    constexpr const T& value() const& noexcept(false)
+    {
+        if (!valid()) throw BadExpectedAccess{};
+        return value_noexcept();
+    }
+    /// value (exception)
+    constexpr T& value() & noexcept(false)
+    {
+        if (!valid()) throw BadExpectedAccess{};
+        return value_noexcept();
+    }
+    /// value (exception)
+    constexpr T value() && noexcept(false)
+    {
+        if (!valid()) throw BadExpectedAccess{};
+        return std::move(value_noexcept());
+    }
 
     /// value (no exception)
     constexpr const T& operator*() const& noexcept { return value_noexcept(); }
@@ -227,51 +215,36 @@ public:
     /// pointer (no exception)
     constexpr T* operator->() const noexcept { return &value_noexcept(); }
 
+    /// error value (no exception)
+    constexpr const E& error_noexcept() const& noexcept { return std::get<Err>(payload).v; }
+    /// error value (no exception)
+    constexpr E& error_noexcept() & noexcept { return std::get<Err>(payload).v; }
+    /// error value (no exception)
+    constexpr E error_noexcept() && noexcept { return std::move(std::get<Err>(payload).v); }
+
     /// error value (exception)
     constexpr const E& error() const& noexcept(false)
     {
         if (valid()) throw BadExpectedAccess{};
-        return std::get<Err>(payload).v;
+        return error_noexcept();
     }
     /// error value (exception)
     constexpr E& error() & noexcept(false)
     {
         if (valid()) throw BadExpectedAccess{};
-        return std::get<Err>(payload).v;
+        return error_noexcept();
     }
     /// error value (exception)
     constexpr E error() && noexcept(false)
     {
         if (valid()) throw BadExpectedAccess{};
-        return std::move(std::get<Err>(payload).v);
-    }
-
-    /// error value (no exception)
-    constexpr const E& error_noexcept() const& noexcept
-    {
-        return std::get<Err>(payload).v;
-    }
-    /// error value (no exception)
-    constexpr E& error_noexcept() & noexcept
-    {
-        return std::get<Err>(payload).v;
-    }
-    /// error value (no exception)
-    constexpr E error_noexcept() && noexcept
-    {
-        return std::move(std::get<Err>(payload).v);
+        return std::move(error_noexcept());
     }
 
     /// regenerate Unexpect
-    constexpr Unexpect<E> unexpected() const& noexcept(false)
-    {
-        return Unexpect(error());
-    }
+    constexpr Unexpect<E> unexpected() const& noexcept(false) { return error(); }
     /// regenerate Unexpect
-    constexpr Unexpect<E> unexpected() && noexcept(false)
-    {
-        return Unexpect(std::move(error()));
-    }
+    constexpr Unexpect<E> unexpected() && noexcept(false) { return std::move(error()); }
 
     /// optional<T>
     constexpr std::optional<T> optional() const& noexcept(std::is_nothrow_copy_constructible_v<T>)
@@ -456,51 +429,6 @@ public:
     constexpr auto or_else(Op && op)&&->std::invoke_result_t<Op, E>
     {
         if (valid()) return {expect_tag_v, std::move(value_noexcept())};
-        return trait::invoke_constexpr(std::forward<Op>(op), std::move(error_noexcept()));
-    }
-
-    /**
-     * @brief then
-     * @param op invoke(op, *this) -> {Expected<U, F> or U}
-     * @return if op returns Expected then op(*this) otherwise Expected<op(*this), F>
-     */
-    template <class Op>
-    constexpr auto then(Op && op) const&->typename Expected<std::invoke_result_t<Op, Expected>, E>::Unwrap_t
-    {
-        return trait::invoke_constexpr(std::forward<Op>(op), *this);
-    }
-    template <class Op>
-    constexpr auto then(Op && op)&->typename Expected<std::invoke_result_t<Op, Expected>, E>::Unwrap_t
-    {
-        return trait::invoke_constexpr(std::forward<Op>(op), *this);
-    }
-    template <class Op>
-    constexpr auto then(Op && op)&&->typename Expected<std::invoke_result_t<Op, Expected>, E>::Unwrap_t
-    {
-        return trait::invoke_constexpr(std::forward<Op>(op), std::move(*this));
-    }
-
-    /**
-     * @brief catch_error
-     * @param op invoke(op, error()) -> T
-     * @return Expected<T, E>
-     */
-    template <class Op>
-    constexpr Expected catch_error(Op && op) const&
-    {
-        if (valid()) return *this;
-        return trait::invoke_constexpr(std::forward<Op>(op), error_noexcept());
-    }
-    template <class Op>
-    constexpr Expected catch_error(Op && op)&
-    {
-        if (valid()) return *this;
-        return trait::invoke_constexpr(std::forward<Op>(op), error_noexcept());
-    }
-    template <class Op>
-    constexpr Expected catch_error(Op && op)&&
-    {
-        if (valid()) return std::move(*this);
         return trait::invoke_constexpr(std::forward<Op>(op), std::move(error_noexcept()));
     }
 

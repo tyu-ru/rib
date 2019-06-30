@@ -239,33 +239,6 @@ TEST_CASE("Expect monad - and_then-or_else", "[container]")
     }
 }
 
-TEST_CASE("Expect monad - then", "[container]")
-{
-    // static_assert(std::is_same_v<decltype(std::declval<Expected<int, long>>().then(std::declval<Expected<double, float>(Expected<int, long>)>())),
-    //                              Expected<double, float>>);
-    // static_assert(std::is_same_v<decltype(std::declval<Expected<int, long>>().then(std::declval<double(Expected<int, long>)>())),
-    //                              Expected<double, long>>);
-    // static_assert([] {
-    //     auto lmd1 = [](Expected<int, int>) { return 'a'; };
-    //     auto lmd2 = [](Expected<int, int>) { return Expected<long, int>(2); };
-    //     return Expected<int, int>(1).then(lmd1) == 'a' &&
-    //            Expected<int, int>(Unexpect(1)).then(lmd1) == 'a' &&
-    //            Expected<int, int>(1).then(lmd2) == 2 &&
-    //            Expected<int, int>(Unexpect(1)).then(lmd2) == 2;
-    // }());
-}
-
-TEST_CASE("Expect monad - catch_error", "[container]")
-{
-    Expected<int, long> e1 = 1, e2 = Unexpect(1);
-    auto lmd = [](int x) { return x + 1; };
-
-    REQUIRE(std::is_same_v<decltype(e1.catch_error(lmd)), Expected<int, long>>);
-
-    CHECK(e1.catch_error(lmd) == 1);
-    CHECK(e2.catch_error(lmd) == 2);
-}
-
 TEST_CASE("Expect monad - mach", "[container]")
 {
     Expected<int, std::string> e1 = 1, e2 = Unexpect("2");
