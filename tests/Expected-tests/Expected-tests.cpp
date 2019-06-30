@@ -20,8 +20,11 @@ TEMPLATE_LIST_TEST_CASE("Expected constructivle trait", "[Container]", TestTypeL
 
     CHECK(std::is_constructible_v<Exp, Ok>);
     CHECK(std::is_constructible_v<Exp, Ok&&>);
+    CHECK(std::is_constructible_v<Exp, Expect<Ok>>);
+    CHECK(std::is_constructible_v<Exp, Expect<Ok>&&>);
     CHECK(std::is_constructible_v<Exp, Unexpect<Err>>);
     CHECK(std::is_constructible_v<Exp, Unexpect<Err>&&>);
+    CHECK(std::is_constructible_v<Exp, ExpectTag, Ok>);
     CHECK(std::is_constructible_v<Exp, UnexpectTag, Err>);
 
     CHECK(std::is_copy_assignable_v<Exp>);
@@ -71,6 +74,18 @@ TEST_CASE("Expected construction & access", "[Container]")
 
         CHECK(e.value_or(0) == 1);
         CHECK(e.value_or_default() == 1);
+    }
+    SECTION("Explicit expect")
+    {
+        Expected<int, int> e = Expect(1);
+        REQUIRE(e);
+        CHECK(e.value() == 1);
+    }
+    SECTION("Expect-Tag")
+    {
+        Expected<int, int> e(expect_tag_v, 1);
+        REQUIRE(e);
+        CHECK(e.value() == 1);
     }
     SECTION("Unexpect")
     {

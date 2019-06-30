@@ -19,9 +19,16 @@ struct BadExpectedAccess
     }
 };
 
+template <class T>
+class Expect;
 template <class E>
 class Unexpect;
 
+struct ExpectTag
+{
+    explicit ExpectTag() = default;
+};
+inline constexpr ExpectTag expect_tag_v{};
 struct UnexpectTag
 {
     explicit UnexpectTag() = default;
@@ -88,6 +95,16 @@ public:
     /// construct by ok value
     template <class... Args, trait::concept_t<std::is_constructible_v<T, Args&&...>> = nullptr>
     constexpr Expected(Args && ... args) noexcept(std::is_nothrow_constructible_v<T, Args&&...>)
+        : payload(std::in_place_type<Ok>, std::forward<Args>(args)...) {}
+    /// construct by ok value
+    template <class U, trait::concept_t<std::is_constructible_v<T, U>> = nullptr>
+    constexpr Expected(const Expect<U>& expect) : payload(std::in_place_type<Ok>, expect.value()) {}
+    /// construct by ok value
+    template <class U, trait::concept_t<std::is_constructible_v<T, U>> = nullptr>
+    constexpr Expected(Expect<U> && expect) : payload(std::in_place_type<Ok>, std::move(expect.value())) {}
+    /// construct by ok value
+    template <class... Args, trait::concept_t<std::is_constructible_v<T, Args&&...>> = nullptr>
+    constexpr Expected(ExpectTag, Args && ... args)
         : payload(std::in_place_type<Ok>, std::forward<Args>(args)...) {}
 
     /// construct by err value
@@ -457,6 +474,23 @@ public:
         if (valid()) return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok), std::move(**this));
         return trait::invoke_constexpr(std::forward<FN_ERR>(fn_err), std::move(error_noexcept()));
     }
+};
+
+template <class T>
+class Expect
+{
+    T payload;
+
+public:
+    constexpr Expect(const T& val) : payload(val) {}
+    constexpr Expect(T&& val) : payload(std::move(val)) {}
+
+    template <class... Args>
+    constexpr Expect(Args&&... args) : payload(std::forward<Args>(args)...) {}
+
+    constexpr const T& value() const& { return payload; }
+    constexpr T& value() & { return payload; }
+    constexpr T value() && { return std::move(payload); }
 };
 
 /**
