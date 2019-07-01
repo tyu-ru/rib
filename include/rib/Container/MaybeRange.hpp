@@ -39,41 +39,4 @@ MaybeRange(T&)->MaybeRange<T&>;
 template <class T>
 MaybeRange(const T&)->MaybeRange<const T&>;
 
-static_assert([] {
-    std::optional<int> a;
-    for (auto&& x[[maybe_unused]] : MaybeRange(a)) {
-        static_assert(std::is_same_v<decltype(x), int&>);
-        return false;
-    }
-    a = 1;
-    int e = 0;
-    for (auto&& x : MaybeRange(a)) {
-        e = x;
-        x = 2;
-    }
-    return e == 1 && a == 2;
-}());
-static_assert([] {
-    const std::optional<int> a;
-    for (auto&& x[[maybe_unused]] : MaybeRange(a)) {
-        static_assert(std::is_same_v<decltype(x), const int&>);
-        return false;
-    }
-    const std::optional<int> b = 1;
-    for (auto&& x : MaybeRange(b)) {
-        return x == 1;
-    }
-    return false;
-}());
-static_assert([] {
-    for (auto&& x[[maybe_unused]] : MaybeRange(std::optional<int>(std::nullopt))) {
-        static_assert(std::is_same_v<decltype(x), const int&>);
-        return false;
-    }
-    for (auto&& x : MaybeRange(std::optional<int>(1))) {
-        return x == 1;
-    }
-    return false;
-}());
-
 } // namespace rib
