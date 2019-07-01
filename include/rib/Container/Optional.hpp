@@ -48,9 +48,9 @@ public:
     constexpr auto unwrap() const -> Optional<unwrap_nest_t<T>>
     {
         if constexpr (is_nested) {
-            return *this;
-        } else {
             return **this;
+        } else {
+            return *this;
         }
     }
 
@@ -95,50 +95,5 @@ public:
         return map(std::forward<F>(f));
     }
 };
-
-static_assert(std::is_default_constructible_v<Optional<int>>);
-static_assert(std::is_constructible_v<Optional<int>, int>);
-static_assert(std::is_constructible_v<Optional<int>, std::nullopt_t>);
-
-static_assert(std::is_same_v<decltype(std::declval<Optional<int>>().unwrap()),
-                             Optional<int>>);
-static_assert(std::is_same_v<decltype(std::declval<Optional<Optional<int>>>().unwrap()),
-                             Optional<int>>);
-
-static_assert(std::is_same_v<decltype(std::declval<Optional<int>>().visit(std::declval<long(int)>())),
-                             Optional<int>>);
-
-static_assert(std::is_same_v<decltype(std::declval<Optional<int>>().map(std::declval<long(int)>())),
-                             Optional<long>>);
-static_assert(std::is_same_v<decltype(std::declval<Optional<int>>().map(std::declval<Optional<long>(int)>())),
-                             Optional<long>>);
-static_assert(std::is_same_v<decltype(std::declval<Optional<int>>().map(std::declval<std::optional<long>(int)>())),
-                             Optional<long>>);
-
-static_assert([] {
-    auto lmd = [](int x) { return x + 1; };
-    return Optional<int>(1).map(lmd) == 2 &&
-           Optional<int>().map(lmd) == std::nullopt;
-}());
-static_assert([] {
-    auto lmd = [](int x) { return Optional<int>(x + 1); };
-    return Optional<int>(1).map(lmd) == 2 &&
-           Optional<int>().map(lmd) == std::nullopt;
-}());
-
-static_assert(trait::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, long(int)>);
-static_assert(trait::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, Optional<long>(int)>);
-static_assert(trait::is_result_v<Optional<long>, std::bit_or<>, Optional<int>, std::optional<long>(int)>);
-
-static_assert([] {
-    int a = 0;
-    for (auto&& x : Optional<int>{1}) {
-        a = x;
-    }
-    for ([[maybe_unused]] auto&& x : Optional<int>{}) {
-        a = 2;
-    }
-    return a == 1;
-}());
 
 } // namespace rib
