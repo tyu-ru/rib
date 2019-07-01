@@ -16,7 +16,4 @@ include_directories(
   )
 enable_testing()
 
-add_subdirectory(tests/UniqPtrVector-tests)
-add_subdirectory(tests/Expected-tests)
-add_subdirectory(tests/MaybeRange-tests)
-add_subdirectory(tests/Optional-tests)
+add_subdirectory(tests/Container-tests)

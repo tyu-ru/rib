@@ -1,0 +1,4 @@
+add_subdirectory(UniqPtrVector-tests)
+add_subdirectory(Expected-tests)
+add_subdirectory(MaybeRange-tests)
+add_subdirectory(Optional-tests)
