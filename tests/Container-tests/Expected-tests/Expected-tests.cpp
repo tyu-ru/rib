@@ -210,7 +210,7 @@ TEST_CASE("Expected swap", "[container]")
     CHECK(e2 == 1);
 }
 
-TEST_CASE("Expect monad - map", "[container]")
+TEST_CASE("Expected monad - map", "[container]")
 {
     Expected<int, int> e1 = 1, e2 = Unexpect(1);
     auto lmd = [](int x) { return std::to_string(x); };
@@ -229,7 +229,7 @@ TEST_CASE("Expect monad - map", "[container]")
     }
 }
 
-TEST_CASE("Expect monad - and_then-or_else", "[container]")
+TEST_CASE("Expected monad - and_then-or_else", "[container]")
 {
     Expected<int, int> e1 = 1, e2 = 2, e3 = Unexpect(1), e4 = Unexpect(2);
     auto lmd1 = [](int x) -> Expected<std::string, int> {
@@ -259,7 +259,7 @@ TEST_CASE("Expect monad - and_then-or_else", "[container]")
     }
 }
 
-TEST_CASE("Expect monad - mach", "[container]")
+TEST_CASE("Expected monad - mach", "[container]")
 {
     Expected<int, std::string> e1 = 1, e2 = Unexpect("2");
     auto lmd1 = [](int x) { return x + 1; };
