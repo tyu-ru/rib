@@ -401,7 +401,7 @@ public:
     }
 
     /// swap value
-    void swap(Expected & rhs) noexcept(noexcept(std::swap(payload.swap(rhs.payload))))
+    void swap(Expected & rhs) noexcept(std::is_nothrow_swappable_v<decltype(payload)>)
     {
         payload.swap(rhs.payload);
     }

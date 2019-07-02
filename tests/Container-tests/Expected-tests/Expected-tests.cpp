@@ -194,6 +194,22 @@ TEST_CASE("Expected equal compare", "[container]")
     }
 }
 
+TEST_CASE("Expected swap", "[container]")
+{
+    Expected<int, int> e1 = 1;
+    Expected<int, int> e2 = Unexpect(1);
+    SECTION("std::swap")
+    {
+        std::swap(e1, e2);
+    }
+    SECTION("member swap")
+    {
+        e1.swap(e2);
+    }
+    CHECK(e1 == Unexpect(1));
+    CHECK(e2 == 1);
+}
+
 TEST_CASE("Expect monad - map", "[container]")
 {
     Expected<int, int> e1 = 1, e2 = Unexpect(1);
