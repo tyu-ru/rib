@@ -159,9 +159,6 @@ TEST_CASE("Expected to Unexpect", "[container]")
     CHECK(e2.unexpected().value() == 1);
 }
 
-// CHECK(std::is_same_v<Expected<int, int>::Unwrap_t, Expected<int, int>>);
-// CHECK(std::is_same_v<Expected<Expected<int, int>, int>::Unwrap_t, Expected<int, int>>);
-
 TEST_CASE("Expected equal compare", "[container]")
 {
     Expected<int, int> e1 = 1, e2 = 2;
