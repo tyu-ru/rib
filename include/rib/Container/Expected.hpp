@@ -142,15 +142,15 @@ public:
 
     /// construct by ok value
     template <class U, trait::concept_t<std::is_constructible_v<T, U>> = nullptr>
-    constexpr Expected(const Expect<U>& expect)
+    constexpr Expected(const Expect<U>& expect) noexcept(std::is_nothrow_constructible_v<T, U>)
         : payload(std::in_place_type<Ok>, expect.payload) {}
     /// construct by ok value
     template <class U, trait::concept_t<std::is_constructible_v<T, U>> = nullptr>
-    constexpr Expected(Expect<U> && expect)
+    constexpr Expected(Expect<U> && expect) noexcept(std::is_nothrow_constructible_v<T, U&&>)
         : payload(std::in_place_type<Ok>, std::move(expect.payload)) {}
     /// construct by ok value
     template <class... Args, trait::concept_t<std::is_constructible_v<T, Args&&...>> = nullptr>
-    constexpr Expected(ExpectTag, Args && ... args)
+    constexpr Expected(ExpectTag, Args && ... args) noexcept(std::is_nothrow_constructible_v<T, Args&&...>)
         : payload(std::in_place_type<Ok>, std::forward<Args>(args)...) {}
 
     /// construct by err value
