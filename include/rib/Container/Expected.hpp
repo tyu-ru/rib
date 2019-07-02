@@ -311,9 +311,21 @@ public:
         return std::nullopt;
     }
     /// optional<T>
-    constexpr std::optional<T> optional() && noexcept(std::is_nothrow_copy_constructible_v<T>)
+    constexpr std::optional<T> optional() && noexcept(std::is_nothrow_move_constructible_v<T>)
     {
         if (valid()) return std::move(value_noexcept());
+        return std::nullopt;
+    }
+    /// optional<E>
+    constexpr std::optional<E> optional_err() const& noexcept(std::is_nothrow_copy_constructible_v<E>)
+    {
+        if (!valid()) return error_noexcept();
+        return std::nullopt;
+    }
+    /// optional<E>
+    constexpr std::optional<E> optional_err() && noexcept(std::is_nothrow_move_constructible_v<E>)
+    {
+        if (!valid()) return std::move(error_noexcept());
         return std::nullopt;
     }
 

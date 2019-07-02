@@ -140,11 +140,14 @@ TEST_CASE("Expected assign", "[container]")
 
 TEST_CASE("Expected to optional", "[container]")
 {
-    Expected<int, int> e = 1;
-    CHECK(std::is_same_v<decltype(e.optional()), std::optional<int>>);
-    CHECK(e.optional() == 1);
-    e = Unexpect(1);
-    CHECK(e.optional() == std::nullopt);
+    Expected<int, std::string> e1 = 1, e2 = Unexpect("Err");
+    CHECK(std::is_same_v<decltype(e1.optional()), std::optional<int>>);
+
+    CHECK(e1.optional() == 1);
+    CHECK(e2.optional() == std::nullopt);
+
+    CHECK(e1.optional_err() == std::nullopt);
+    CHECK(e2.optional_err() == "Err");
 }
 
 TEST_CASE("Expected to Unexpect", "[container]")
