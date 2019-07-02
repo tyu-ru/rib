@@ -61,58 +61,58 @@ TEST_CASE("Expected construction & access", "[Container]")
 {
     SECTION("Normal")
     {
-        Expected<int, int> e = 1;
+        Expected<int, std::string> e = 1;
         REQUIRE(e);
         REQUIRE_FALSE(!e);
         REQUIRE(e.valid());
 
+        REQUIRE_NOTHROW(e.value());
         CHECK(e.value() == 1);
-        CHECK_NOTHROW(e.value());
         CHECK(e.value_noexcept() == 1);
         CHECK(*e == 1);
 
-        CHECK_THROWS_AS(e.error(), BadExpectedAccess);
+        REQUIRE_THROWS_AS(e.error(), BadExpectedAccess);
 
         CHECK(e.value_or(0) == 1);
         CHECK(e.value_or_default() == 1);
         CHECK(e.value_or_else([] { return 2; }) == 1);
-        CHECK(e.value_or_else([](int err) { return err + 1; }) == 1);
+        CHECK(e.value_or_else([](std::string err) { return err.length() + 1; }) == 1);
     }
     SECTION("Explicit expect")
     {
-        Expected<int, int> e = Expect(1);
+        Expected<int, std::string> e = Expect(1);
         REQUIRE(e);
         CHECK(e.value() == 1);
     }
     SECTION("Expect-Tag")
     {
-        Expected<int, int> e(expect_tag_v, 1);
+        Expected<int, std::string> e(expect_tag_v, 1);
         REQUIRE(e);
         CHECK(e.value() == 1);
     }
     SECTION("Unexpect")
     {
-        Expected<int, int> e = Unexpect(1);
+        Expected<int, std::string> e = Unexpect("Err");
         REQUIRE_FALSE(e);
         REQUIRE(!e);
         REQUIRE_FALSE(e.valid());
 
-        CHECK(e.error() == 1);
-        CHECK_NOTHROW(e.error());
-        CHECK(e.error_noexcept() == 1);
+        REQUIRE_NOTHROW(e.error());
+        CHECK(e.error() == "Err");
+        CHECK(e.error_noexcept() == "Err");
 
-        CHECK_THROWS_AS(e.value(), BadExpectedAccess);
+        REQUIRE_THROWS_AS(e.value(), BadExpectedAccess);
 
         CHECK(e.value_or(0) == 0);
         CHECK(e.value_or_default() == 0);
         CHECK(e.value_or_else([] { return 2; }) == 2);
-        CHECK(e.value_or_else([](int err) { return err + 1; }) == 2);
+        CHECK(e.value_or_else([](std::string err) { return err.length() + 1; }) == 4);
     }
     SECTION("Unexpect-tag")
     {
-        Expected<int, int> e(unexpect_tag_v, 1);
+        Expected<int, std::string> e(unexpect_tag_v, "Err");
         REQUIRE_FALSE(e);
-        CHECK(e.error() == 1);
+        CHECK(e.error() == "Err");
     }
     SECTION("Structure")
     {

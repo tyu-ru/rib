@@ -255,6 +255,8 @@ public:
             return trait::invoke_constexpr(std::forward<F>(f), error_noexcept());
         } else if constexpr (std::is_invocable_r_v<T, F>) {
             return trait::invoke_constexpr(std::forward<F>(f));
+        } else {
+            static_assert([] { return false; });
         }
     }
     template <class F>
@@ -265,6 +267,8 @@ public:
             return trait::invoke_constexpr(std::forward<F>(f), std::move(error_noexcept()));
         } else if constexpr (std::is_invocable_r_v<T, F>) {
             return trait::invoke_constexpr(std::forward<F>(f));
+        } else {
+            static_assert([] { return false; });
         }
     }
 
