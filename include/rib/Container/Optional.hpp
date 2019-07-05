@@ -7,7 +7,7 @@
 #include "../Traits/TypeTraits.hpp"
 #include "../Traits/FuncTraits.hpp"
 #include "../Mixin/NullableAccepter.hpp"
-#include "../Iterator/MaybeIterator.hpp"
+#include "../Iterator/MaybeIteratible.hpp"
 
 namespace rib
 {

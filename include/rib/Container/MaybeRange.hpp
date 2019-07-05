@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Iterator/MaybeIterator.hpp"
+#include "../Iterator/MaybeIteratible.hpp"
 #include "../Mixin/CopyMoveTrait.hpp"
 
 namespace rib

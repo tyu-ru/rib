@@ -6,8 +6,14 @@
 
 using namespace rib;
 
-using TestTypeList = std::tuple<std::optional<int>, std::shared_ptr<int>,
-                                const std::optional<int>, const std::shared_ptr<int>>;
+using TestTypeList = std::tuple<
+    std::optional<int>,
+    const std::optional<int>,
+    std::shared_ptr<int>,
+    const std::shared_ptr<int> /*,
+    std::unique_ptr<int>,
+    const std::unique_ptr<int>*/
+    >;
 
 template <class T>
 T gen_test_nul();
