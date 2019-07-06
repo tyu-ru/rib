@@ -1,8 +1,8 @@
 #pragma once
 
-#include "MaybeIterator.hpp"
+#include "../Iterator/MaybeIterator.hpp"
 
-namespace rib
+namespace rib::mixin
 {
 
 /**

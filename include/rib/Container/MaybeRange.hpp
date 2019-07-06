@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Iterator/MaybeIteratible.hpp"
+#include "../Mixin/MaybeIteratible.hpp"
 #include "../Mixin/CopyMoveTrait.hpp"
 
 namespace rib
@@ -8,7 +8,7 @@ namespace rib
 
 template <class T>
 struct MaybeRange
-    : public rib::MaybeIteratible<MaybeRange<T>, std::decay_t<decltype(*std::declval<T&>())>>,
+    : public rib::mixin::MaybeIteratible<MaybeRange<T>, std::decay_t<decltype(*std::declval<T&>())>>,
       private rib::mixin::CopyMoveTrait<false, false, false, false, MaybeRange<T>>
 {
     constexpr MaybeRange(T x) : payload(x) {}
@@ -22,7 +22,7 @@ private:
 };
 template <class T>
 struct MaybeRange<const T&>
-    : public rib::MaybeConstIteratible<MaybeRange<const T&>, std::decay_t<decltype(*std::declval<const T&>())>>,
+    : public rib::mixin::MaybeConstIteratible<MaybeRange<const T&>, std::decay_t<decltype(*std::declval<const T&>())>>,
       private rib::mixin::CopyMoveTrait<false, false, false, false, MaybeRange<const T&>>
 {
     constexpr MaybeRange(T x) : payload(x) {}

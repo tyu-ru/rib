@@ -7,7 +7,7 @@
 #include "../Traits/TypeTraits.hpp"
 #include "../Traits/FuncTraits.hpp"
 #include "../Mixin/NullableAccepter.hpp"
-#include "../Iterator/MaybeIteratible.hpp"
+#include "../Mixin/MaybeIteratible.hpp"
 
 namespace rib
 {
@@ -15,7 +15,7 @@ namespace rib
 template <class T>
 class Optional
     : public mixin::NullableAccepter<Optional<T>>,
-      public MaybeIteratible<Optional<T>, T>,
+      public mixin::MaybeIteratible<Optional<T>, T>,
       public std::optional<T>
 {
     static constexpr bool is_nested = trait::is_template_specialized_by_type_v<Optional, T>;
