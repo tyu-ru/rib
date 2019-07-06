@@ -12,7 +12,7 @@ namespace rib::mixin
  * @tparam T value type
  */
 template <class Derived, class T>
-struct MaybeConstIteratible
+struct MaybeConstIterable
 {
     /**
      * @brief begin iterator to beginning
@@ -41,7 +41,7 @@ struct MaybeConstIteratible
  * @tparam T value type
  */
 template <class Derived, class T>
-struct MaybeIteratible : public MaybeConstIteratible<Derived, T>
+struct MaybeIterable : public MaybeConstIterable<Derived, T>
 {
     /**
      * @brief begin iterator to beginning
@@ -63,4 +63,4 @@ struct MaybeIteratible : public MaybeConstIteratible<Derived, T>
     constexpr MaybeIterator<T, Derived> end() { return nullptr; }
 };
 
-} // namespace rib
+} // namespace rib::mixin
