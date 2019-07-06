@@ -7,35 +7,46 @@ namespace rib
 
 /**
  * @brief Iterator for data that may have a const value
- * @details 
- * @tparam Derived 
- * @tparam T 
+ * @details
+ * @tparam Derived CRTP
+ * @tparam T value type
  */
 template <class Derived, class T>
 struct MaybeConstIteratible
 {
+    /**
+     * @brief begin iterator to beginning
+     * @details returns iterator to value or null
+     * @return constexpr MaybeConstIterator<T, Derived>
+     */
     constexpr MaybeConstIterator<T, Derived> begin() const
     {
         auto& d = static_cast<const Derived&>(*this);
         if (d) return &*d;
         return nullptr;
     }
+
+    /**
+     * @brief end iterator to the end
+     * @details returns iterator to null
+     * @return constexpr MaybeConstIterator<T, Derived>
+     */
     constexpr MaybeConstIterator<T, Derived> end() const { return nullptr; }
 };
 
 /**
- * @brief 
- * @details 
- * @tparam Derived 
- * @tparam T 
+ * @brief iterator for data that may have a value
+ * @details
+ * @tparam Derived CRTP
+ * @tparam T value type
  */
 template <class Derived, class T>
 struct MaybeIteratible : public MaybeConstIteratible<Derived, T>
 {
     /**
-     * @brief 
-     * 
-     * @return constexpr MaybeIterator<T, Derived> 
+     * @brief begin iterator to beginning
+     * @details returns iterator to value or null
+     * @return constexpr MaybeIterator<T, Derived>
      */
     constexpr MaybeIterator<T, Derived> begin()
     {
@@ -44,6 +55,11 @@ struct MaybeIteratible : public MaybeConstIteratible<Derived, T>
         return nullptr;
     }
 
+    /**
+     * @brief end iterator to the end
+     * @details returns iterator to null
+     * @return constexpr MaybeIterator<T, Derived>
+     */
     constexpr MaybeIterator<T, Derived> end() { return nullptr; }
 };
 
