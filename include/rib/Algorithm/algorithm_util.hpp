@@ -1,10 +1,20 @@
 #pragma once
 
 #include <algorithm>
-#include "Traits/FuncTraits.hpp"
+#include "../Traits/TypeTraits.hpp"
+#include "../Traits/FuncTraits.hpp"
 
-namespace rib::algorithm
+namespace rib::algo
 {
+
+template <class T, trait::concept_t<std::is_member_pointer_v<T>> = nullptr>
+auto gen_member_less(T mem_ptr)
+{
+    return [=](auto&& lhs, auto&& rhs) {
+        return trait::invoke_constexpr(mem_ptr, std::forward<decltype(lhs)>(lhs)) <
+               trait::invoke_constexpr(mem_ptr, std::forward<decltype(rhs)>(rhs));
+    };
+}
 
 /// xxx_if algorithm
 
@@ -40,4 +50,4 @@ inline constexpr auto find(Container&& c, T&& value)
     return std::find(begin(c), end(c), value);
 }
 
-} // namespace rib::algorithm
+} // namespace rib::algo
