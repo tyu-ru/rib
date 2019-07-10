@@ -534,4 +534,16 @@ public:
     }
 };
 
+template <class T, class E, class... Args>
+inline constexpr Expected<T, E> aggregateExpected(const Expected<Args, E>&... args)
+{
+    if ((... && (args.valid()))) {
+        return T{*args...};
+    }
+    std::optional<E> e;
+    auto f = [&](const E& ee) {if(!e){e = ee;} return Unexpect(ee); };
+    (..., ((void)args.emap(f)));
+    return Unexpect(*e);
+}
+
 } // namespace rib
