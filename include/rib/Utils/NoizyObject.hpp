@@ -22,6 +22,7 @@ public:
     NoizyObject(int i) : id(i) { log() << "ctor." << std::endl; }
     NoizyObject(const NoizyObject& other) : id(other.id) { log() << "copy ctor." << std::endl; }
     NoizyObject(NoizyObject&& other) : id(other.id) { log() << "move ctor." << std::endl; }
+    ~NoizyObject() { log() << "dtor." << std::endl; }
 
     NoizyObject& operator=(const NoizyObject& other)
     {
@@ -30,6 +31,7 @@ public:
         else
             log() << "copy assign. id -> none" << std::endl;
         id = other.id;
+        return *this;
     }
     NoizyObject& operator=(NoizyObject&& other)
     {
@@ -38,6 +40,7 @@ public:
         else
             log() << "move assign. id -> none" << std::endl;
         id = other.id;
+        return *this;
     }
 };
 
