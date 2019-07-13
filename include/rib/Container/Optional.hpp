@@ -94,6 +94,43 @@ public:
     {
         return map(std::forward<F>(f));
     }
+
+    template <class R, class FnSome, class FnNone>
+    constexpr R match(FnSome&& fnSome, FnNone&& fnNone) const&
+    {
+        if (*this) {
+            if constexpr (std::is_invocable_r_v<R, FnSome, T>) {
+                return trait::invoke_constexpr(std::forward<FnSome>(fnSome), **this);
+            } else {
+                return trait::invoke_constexpr(std::forward<FnSome>(fnSome));
+            }
+        }
+        return trait::invoke_constexpr(std::forward<FnNone>(fnNone));
+    }
+    template <class R, class FnSome, class FnNone>
+    constexpr R match(FnSome&& fnSome, FnNone&& fnNone)&
+    {
+        if (*this) {
+            if constexpr (std::is_invocable_r_v<R, FnSome, T>) {
+                return trait::invoke_constexpr(std::forward<FnSome>(fnSome), **this);
+            } else {
+                return trait::invoke_constexpr(std::forward<FnSome>(fnSome));
+            }
+        }
+        return trait::invoke_constexpr(std::forward<FnNone>(fnNone));
+    }
+    template <class R, class FnSome, class FnNone>
+    constexpr R match(FnSome&& fnSome, FnNone&& fnNone)&&
+    {
+        if (*this) {
+            if constexpr (std::is_invocable_r_v<R, FnSome, T>) {
+                return trait::invoke_constexpr(std::forward<FnSome>(fnSome), std::move(**this));
+            } else {
+                return trait::invoke_constexpr(std::forward<FnSome>(fnSome));
+            }
+        }
+        return trait::invoke_constexpr(std::forward<FnNone>(fnNone));
+    }
 };
 
 } // namespace rib

@@ -65,6 +65,20 @@ TEST_CASE("Optional - map", "[container]")
     };
 }
 
+TEST_CASE("Optional - match", "[container]")
+{
+    Optional<int> o1 = 1, o2;
+
+    auto lmd1 = [](int x) { return std::to_string(x); };
+    auto lmd2 = [] { return "lmd2"; };
+    auto lmd3 = [] { return "lmd3"; };
+
+    CHECK(o1.match<std::string>(lmd1, lmd2) == "1");
+    CHECK(o2.match<std::string>(lmd1, lmd2) == "lmd2");
+
+    CHECK(o1.match<std::string>(lmd3, lmd2) == "lmd3");
+}
+
 TEST_CASE("Optional - Range Iterator", "[container]")
 {
     bool f = true;
