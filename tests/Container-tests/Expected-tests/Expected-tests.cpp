@@ -264,6 +264,7 @@ TEST_CASE("Expected monad - mach", "[container]")
     Expected<int, std::string> e1 = 1, e2 = Unexpect("2");
     auto lmd1 = [](int x) { return x + 1; };
     auto lmd2 = [](std::string x) { return std::stoi(x) * 2; };
+    auto lmd3 = [] { return 34; };
 
     REQUIRE(std::is_same_v<decltype(e1.mach<void>(lmd1, lmd2)), void>);
     REQUIRE(std::is_same_v<decltype(e1.mach<int>(lmd1, lmd2)), int>);
@@ -271,4 +272,7 @@ TEST_CASE("Expected monad - mach", "[container]")
 
     CHECK(e1.mach<int>(lmd1, lmd2) == 2);
     CHECK(e2.mach<int>(lmd1, lmd2) == 4);
+
+    CHECK(e1.mach<int>(lmd3, lmd2) == 34);
+    CHECK(e2.mach<int>(lmd1, lmd3) == 34);
 }

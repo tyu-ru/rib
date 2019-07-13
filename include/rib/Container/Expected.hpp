@@ -517,20 +517,50 @@ public:
     template <class R, class FN_OK, class FN_ERR>
     constexpr R mach(FN_OK && fn_ok, FN_ERR && fn_err) const&
     {
-        if (valid()) return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok), value_noexcept());
-        return trait::invoke_constexpr(std::forward<FN_ERR>(fn_err), error_noexcept());
+        if (valid()) {
+            if constexpr (std::is_invocable_r_v<R, FN_OK, T>) {
+                return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok), value_noexcept());
+            } else {
+                return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok));
+            }
+        }
+        if constexpr (std::is_invocable_r_v<R, FN_ERR, E>) {
+            return trait::invoke_constexpr(std::forward<FN_ERR>(fn_err), error_noexcept());
+        } else {
+            return trait::invoke_constexpr(std::forward<FN_ERR>(fn_err));
+        }
     }
     template <class R, class FN_OK, class FN_ERR>
     constexpr R mach(FN_OK && fn_ok, FN_ERR && fn_err)&
     {
-        if (valid()) return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok), value_noexcept());
-        return trait::invoke_constexpr(std::forward<FN_ERR>(fn_err), error_noexcept());
+        if (valid()) {
+            if constexpr (std::is_invocable_r_v<R, FN_OK, T>) {
+                return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok), value_noexcept());
+            } else {
+                return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok));
+            }
+        }
+        if constexpr (std::is_invocable_r_v<R, FN_ERR, E>) {
+            return trait::invoke_constexpr(std::forward<FN_ERR>(fn_err), error_noexcept());
+        } else {
+            return trait::invoke_constexpr(std::forward<FN_ERR>(fn_err));
+        }
     }
     template <class R, class FN_OK, class FN_ERR>
     constexpr R mach(FN_OK && fn_ok, FN_ERR && fn_err)&&
     {
-        if (valid()) return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok), std::move(value_noexcept()));
-        return trait::invoke_constexpr(std::forward<FN_ERR>(fn_err), std::move(error_noexcept()));
+        if (valid()) {
+            if constexpr (std::is_invocable_r_v<R, FN_OK, T>) {
+                return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok), std::move(value_noexcept()));
+            } else {
+                return trait::invoke_constexpr(std::forward<FN_OK>(fn_ok));
+            }
+        }
+        if constexpr (std::is_invocable_r_v<R, FN_ERR, E>) {
+            return trait::invoke_constexpr(std::forward<FN_ERR>(fn_err), std::move(error_noexcept()));
+        } else {
+            return trait::invoke_constexpr(std::forward<FN_ERR>(fn_err));
+        }
     }
 };
 
