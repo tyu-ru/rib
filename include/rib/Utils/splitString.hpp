@@ -8,7 +8,7 @@ namespace rib
 template <class F>
 constexpr void splitString(std::string_view str, std::string_view del, F&& func)
 {
-    if (str.empty()) return;
+    if (str.empty() || del.empty()) return;
 
     auto pos = std::string_view::npos;
     while ((pos = str.find(del)) != std::string_view::npos) {

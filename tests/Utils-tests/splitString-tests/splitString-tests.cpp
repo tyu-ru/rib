@@ -24,5 +24,10 @@ TEST_CASE("splitString", "[utils]")
         splitString("Hello Programming World", " ", VISITOR_CAP(s, v.emplace_back(s);));
         e.assign({"Hello", "Programming", "World"});
     }
+    SECTION("empty delimiter")
+    {
+        splitString("Hello Programming World", "", VISITOR_CAP(s, v.emplace_back(s);));
+        e.assign({});
+    }
     CHECK(v == e);
 }
