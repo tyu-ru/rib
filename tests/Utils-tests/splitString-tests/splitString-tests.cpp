@@ -29,5 +29,23 @@ TEST_CASE("splitString", "[utils]")
         splitString("Hello Programming World", "", VISITOR_CAP(s, v.emplace_back(s);));
         e.assign({});
     }
+    SECTION("skip empty")
+    {
+        SECTION("skip")
+        {
+            splitString("Hello  Programming World", " ", VISITOR_CAP(s, v.emplace_back(s);));
+            e.assign({"Hello", "Programming", "World"});
+        }
+        SECTION("keep")
+        {
+            splitString("Hello  Programming World", " ", VISITOR_CAP(s, v.emplace_back(s);), false);
+            e.assign({"Hello", "", "Programming", "World"});
+        }
+    }
+    SECTION("multi delimiter")
+    {
+        splitString("Hello Programming,World", " ,", VISITOR_CAP(s, v.emplace_back(s);));
+        e.assign({"Hello", "Programming", "World"});
+    }
     CHECK(v == e);
 }
