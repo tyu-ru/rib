@@ -10,41 +10,43 @@ using namespace rib;
 TEST_CASE("splitString", "[utils]")
 {
     std::vector<std::string> v, e;
+    auto lmd = VISITOR_CAP(s, v.emplace_back(s););
     SECTION("empty string")
     {
-        splitString("", "", VISITOR_CAP(s, v.emplace_back(s);));
+        splitString("", "", lmd);
+        e.assign({});
     }
     SECTION("normal1")
     {
-        splitString("Hello World", " ", VISITOR_CAP(s, v.emplace_back(s);));
+        splitString("Hello World", " ", lmd);
         e.assign({"Hello", "World"});
     }
     SECTION("normal2")
     {
-        splitString("Hello Programming World", " ", VISITOR_CAP(s, v.emplace_back(s);));
+        splitString("Hello Programming World", " ", lmd);
         e.assign({"Hello", "Programming", "World"});
     }
     SECTION("empty delimiter")
     {
-        splitString("Hello Programming World", "", VISITOR_CAP(s, v.emplace_back(s);));
+        splitString("Hello Programming World", "", lmd);
         e.assign({});
     }
     SECTION("skip empty")
     {
         SECTION("skip")
         {
-            splitString("Hello  Programming World", " ", VISITOR_CAP(s, v.emplace_back(s);));
+            splitString("Hello  Programming World", " ", lmd);
             e.assign({"Hello", "Programming", "World"});
         }
         SECTION("keep")
         {
-            splitString("Hello  Programming World", " ", VISITOR_CAP(s, v.emplace_back(s);), false);
+            splitString("Hello  Programming World", " ", lmd, false);
             e.assign({"Hello", "", "Programming", "World"});
         }
     }
     SECTION("multi delimiter")
     {
-        splitString("Hello Programming,World", " ,", VISITOR_CAP(s, v.emplace_back(s);));
+        splitString("Hello Programming,World", " ,", lmd);
         e.assign({"Hello", "Programming", "World"});
     }
     CHECK(v == e);
