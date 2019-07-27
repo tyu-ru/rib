@@ -48,8 +48,8 @@ public:
             return {end(), false};
         }
 
-        auto range = std::equal_range(makeReinterpretIterator<&value_type::first>(makeReinterpretIterator<&Data::v>(data)),
-                                      makeReinterpretIterator<&value_type::first>(makeReinterpretIterator<&Data::v>(data + size_)),
+        auto range = std::equal_range(makeReinterpretIterator<&Data::v, &value_type::first>(data),
+                                      makeReinterpretIterator<&Data::v, &value_type::first>(data + size_),
                                       x.first);
         auto index = static_cast<std::size_t>(range.first.iterator() - data);
 
@@ -67,18 +67,15 @@ public:
 
     constexpr bool contain(const Key& key) const
     {
-        return std::binary_search(
-            makeReinterpretIterator<&value_type::first>(makeReinterpretIterator<&Data::v>(data)),
-            makeReinterpretIterator<&value_type::first>(makeReinterpretIterator<&Data::v>(data + size_)),
-            key);
+        return std::binary_search(makeReinterpretIterator<&Data::v, &value_type::first>(data),
+                                  makeReinterpretIterator<&Data::v, &value_type::first>(data + size_),
+                                  key);
     }
 
     constexpr Value at(const Key& key) const
     {
-        auto it = std::lower_bound(
-            makeReinterpretIterator<&value_type::first>(makeReinterpretIterator<&Data::v>(data)),
-            makeReinterpretIterator<&value_type::first>(makeReinterpretIterator<&Data::v>(data + size_)),
-            key);
+        auto it = std::lower_bound(makeReinterpretIterator<&Data::v, &value_type::first>(data),
+                                   makeReinterpretIterator<&Data::v, &value_type::first>(data + size_), key);
         if (it == data + size_) {
             return {};
         }

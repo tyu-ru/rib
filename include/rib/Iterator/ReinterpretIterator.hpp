@@ -6,7 +6,7 @@
 namespace rib
 {
 
-template <class Iterator, auto f>
+template <class Iterator, auto... f>
 class ReinterpretIterator
 {
     Iterator itr;
@@ -57,13 +57,23 @@ public:
         return {it};
     }
 
-    constexpr decltype(auto) operator*() { return trait::invoke_constexpr(f, itr); }
-
+    constexpr decltype(auto) operator*() { return derefer_helper<f...>(itr); }
     constexpr Iterator iterator() const { return itr; }
+
+private:
+    template <auto top, auto... tail, class T>
+    inline constexpr decltype(auto) derefer_helper(T& x)
+    {
+        if constexpr (sizeof...(tail)) {
+            return derefer_helper<tail...>(trait::invoke_constexpr(top, x));
+        } else {
+            return trait::invoke_constexpr(top, x);
+        }
+    }
 };
 
-template <auto f, class Iterator>
-ReinterpretIterator<std::decay_t<Iterator>, f> makeReinterpretIterator(Iterator itr)
+template <auto... f, class Iterator>
+ReinterpretIterator<std::decay_t<Iterator>, f...> makeReinterpretIterator(Iterator itr)
 {
     return {itr};
 }
