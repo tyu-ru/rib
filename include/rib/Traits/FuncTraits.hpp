@@ -3,6 +3,8 @@
 #include <functional>
 #include <type_traits>
 
+#include "TypeTraits.hpp"
+
 namespace rib::trait
 {
 
