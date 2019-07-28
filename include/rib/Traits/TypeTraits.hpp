@@ -129,7 +129,7 @@ static_assert(std::is_same_v<copy_const_t<const int, const long>, const long>);
  * @brief concept_t
  * for SFINAE
  */
-template <bool f>
-using concept_t = std::enable_if_t<f, std::nullptr_t>;
+template <bool... f>
+using concept_t = std::enable_if_t<(... && f), std::nullptr_t>;
 
 } // namespace rib::trait

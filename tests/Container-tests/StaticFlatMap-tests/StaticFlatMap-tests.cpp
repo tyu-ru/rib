@@ -56,6 +56,8 @@ TEST_CASE("StaticFlatMap - insert", "[container]")
     }
 }
 
-TEST_CASE("StaticFlatMap - contain", "[container]")
+TEST_CASE("ConstexprMap", "[container]")
 {
+    constexpr auto a = make_ConstexprMap(std::pair{1, "1"}, std::pair{2, "2"});
+    constexpr ConstexprMap b(std::pair(1, "1"), std::pair(2, "2"));
 }

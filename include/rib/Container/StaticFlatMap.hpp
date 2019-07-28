@@ -37,12 +37,12 @@ public:
         }
     }
 
-    constexpr std::size_t size() const noexcept { return size_; }
+    std::size_t size() const noexcept { return size_; }
 
-    constexpr iterator begin() { return {this, 0}; }
-    constexpr iterator end() { return {this, size_}; }
+    iterator begin() { return {this, 0}; }
+    iterator end() { return {this, size_}; }
 
-    constexpr std::pair<iterator, bool> insert(const value_type& x)
+    std::pair<iterator, bool> insert(const value_type& x)
     {
         if (size_ == n) {
             return {end(), false};
@@ -65,21 +65,21 @@ public:
         return {{this, index}, true};
     }
 
-    constexpr bool contain(const Key& key) const
+    bool contain(const Key& key) const
     {
         return std::binary_search(makeReinterpretIterator<&Data::v, &value_type::first>(data),
                                   makeReinterpretIterator<&Data::v, &value_type::first>(data + size_),
                                   key);
     }
 
-    constexpr Value at(const Key& key) const
+    Value at(const Key& key) const
     {
         auto it = std::lower_bound(makeReinterpretIterator<&Data::v, &value_type::first>(data),
                                    makeReinterpretIterator<&Data::v, &value_type::first>(data + size_), key);
         if (it == data + size_) {
             return {};
         }
-        return data[std::distance(data, it.iterator().iterator())].v.second;
+        return data[std::distance(data, it.iterator())].v.second;
     }
 };
 
@@ -100,38 +100,80 @@ private:
     Parent* parent = nullptr;
     std::size_t i = 0;
 
-    constexpr iterator(Parent* parent_, std::size_t i_) : parent(parent_), i(i_) {}
+    iterator(Parent* parent_, std::size_t i_) : parent(parent_), i(i_) {}
 
 public:
-    constexpr iterator() = default;
+    iterator() = default;
 
-    constexpr iterator operator+(std::ptrdiff_t d) const { return {parent, i + d}; }
-    constexpr iterator operator-(std::ptrdiff_t d) const { return {parent, i - d}; }
-    constexpr iterator& operator+=(std::ptrdiff_t d) { return i += d, *this; }
-    constexpr iterator& operator-=(std::ptrdiff_t d) { return i -= d, *this; }
+    iterator operator+(std::ptrdiff_t d) const { return {parent, i + d}; }
+    iterator operator-(std::ptrdiff_t d) const { return {parent, i - d}; }
+    iterator& operator+=(std::ptrdiff_t d) { return i += d, *this; }
+    iterator& operator-=(std::ptrdiff_t d) { return i -= d, *this; }
 
-    constexpr std::ptrdiff_t operator-(const iterator& rhs) const { return i - rhs.i; }
+    std::ptrdiff_t operator-(const iterator& rhs) const { return i - rhs.i; }
 
-    constexpr bool operator==(const iterator& rhs) const { return parent == rhs.parent && i == rhs.i; }
-    constexpr bool operator!=(const iterator& rhs) const { return !(*this == rhs); }
+    bool operator==(const iterator& rhs) const { return parent == rhs.parent && i == rhs.i; }
+    bool operator!=(const iterator& rhs) const { return !(*this == rhs); }
 
-    constexpr iterator& operator++() { return ++i, *this; }
-    constexpr iterator& operator--() { return --i, *this; }
-    constexpr iterator operator++(int)
+    iterator& operator++() { return ++i, *this; }
+    iterator& operator--() { return --i, *this; }
+    iterator operator++(int)
     {
         auto tmp = *this;
         ++i;
         return tmp;
     }
-    constexpr iterator operator--(int)
+    iterator operator--(int)
     {
         auto tmp = *this;
         --i;
         return tmp;
     }
 
-    constexpr value_type operator*() const { return parent->data[i].v; }
-    constexpr pointer operator->() const { return &(parent->data[i].v); }
+    value_type operator*() const { return parent->data[i].v; }
+    pointer operator->() const { return &(parent->data[i].v); }
 };
+
+template <class Key, class Value, std::size_t n>
+#if __cplusplus > 201703L
+[[deprecated]]
+#endif
+    class ConstexprMap
+{
+    // in c++20, pair array etc. become constexpr
+    Key key[n] = {};
+    Value value[n] = {};
+
+public:
+    constexpr ConstexprMap(std::array<std::pair<Key, Value>, n> dat)
+    {
+        // constexpr sort. selection sort
+        for (std::size_t i = 0; i < dat.size(); ++i) {
+            std::size_t min = i;
+            for (std::size_t j = i + 1; j < dat.size(); ++j) {
+                if (dat[j].first < dat[min].first) {
+                    min = j;
+                }
+            }
+            key[i] = dat[min].first;
+            value[i] = dat[min].second;
+        }
+    }
+    template <class... Args, trait::concept_t<std::is_same_v<std::pair<Key, Value>, Args>...> = nullptr>
+    constexpr ConstexprMap(Args... dat)
+        : ConstexprMap(std::array<std::pair<Key, Value>, n>{dat...})
+    {
+    }
+};
+template <class Key, class Value, class... Args,
+          trait::concept_t<std::is_same_v<std::pair<Key, Value>, Args>...> = nullptr>
+ConstexprMap(std::pair<Key, Value>, Args...)->ConstexprMap<Key, Value, sizeof...(Args) + 1>;
+
+template <class Key, class Value, class... Args>
+constexpr ConstexprMap<Key, Value, sizeof...(Args) + 1> make_ConstexprMap(std::pair<Key, Value> top, Args... args)
+{
+    std::array<std::pair<Key, Value>, sizeof...(Args) + 1> tmp{top, args...};
+    return tmp;
+}
 
 } // namespace rib
