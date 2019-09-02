@@ -7,9 +7,9 @@ namespace rib
 
 /**
  * @brief explicit call by reference helper
- * @tparam T 
+ * @tparam T
  * @par example
- * @code 
+ * @code
  * void f(Ref<int> r) {
  *     r = 42;
  * }
@@ -31,6 +31,9 @@ struct Ref
     constexpr T& operator=(const T& x) { return ref = x; }
     /// assign
     constexpr Ref& operator=(const Ref& x) { return ref = x; }
+
+    /// arrow
+    constexpr T* operator->() { return &ref; }
 
     /// type conversion
     constexpr operator const T&() const { return ref; }
