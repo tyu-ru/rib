@@ -19,15 +19,5 @@ inline constexpr auto rss(InputIterator1 first1, InputIterator1 last1, InputIter
     }
     return sum;
 }
-static_assert([] {
-    int a[3] = {1, 2, 3};
-    return rss(a, a + 3, a) == 0;
-}());
-
-static_assert([] {
-    int a[3] = {1, 2, 3};
-    int b[3] = {0, 3, 1};
-    return rss(a, a + 3, b) == 1 + 1 + 4;
-}());
 
 } // namespace rib::math
