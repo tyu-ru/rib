@@ -8,13 +8,13 @@ namespace rib::math
 /**
  * @brief calculate maclaurin series
  * @details \f[\sum_{i=0}^n \frac{f(i)}{n!}x^i\f]
- * @param x 
+ * @param x
  * @param f f(i) -> \f$func^{(n)}(0)\f$
- * @param n caluclate [0, n]th items
- * @return constexpr T 
+ * @param n degree. caluclate [0, n]_th items
+ * @return constexpr T
  */
 template <class T, class F>
-inline constexpr T maclaurinSeries(const T& x, F f, std::size_t n)
+inline constexpr T maclaurinSeries(const T& x, F&& f, std::size_t n)
 {
     T sum = 0, xn = 1, fa = 1;
     for (std::size_t i = 0; i <= n; ++i, fa *= i, xn *= x) {
