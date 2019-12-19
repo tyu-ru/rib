@@ -33,42 +33,60 @@ std::unique_ptr<int> gen_test_val() { return std::make_unique<int>(1); }
 
 TEMPLATE_LIST_TEST_CASE("MaybeRange_lvalue", "[container]", TestTypeList)
 {
-    TestType a = gen_test_nul<std::remove_const_t<TestType>>();
-    bool f = true;
-    for (auto&& x[[maybe_unused]] : MaybeRange(a)) {
-        f = false;
-    }
-    CHECK(f);
-
-    TestType b = gen_test_val<std::remove_const_t<TestType>>();
-    f = false;
-    for (auto&& x : MaybeRange(b)) {
-        static_assert(std::is_same_v<decltype(x), trait::copy_const_t<TestType, int>&>);
-        CHECK(x == 1);
-        f = true;
-        if constexpr (!std::is_const_v<TestType>) {
-            x = 2;
+    SECTION("null")
+    {
+        TestType a = gen_test_nul<std::remove_const_t<TestType>>();
+        for (auto&& x[[maybe_unused]] : MaybeRange(a)) {
+            FAIL();
         }
     }
-    CHECK(f);
-    if constexpr (!std::is_const_v<TestType>) {
-        CHECK(*b == 2);
+    SECTION("has value")
+    {
+        TestType b = gen_test_val<std::remove_const_t<TestType>>();
+        bool f = false;
+        for (auto&& x : MaybeRange(b)) {
+            STATIC_REQUIRE(std::is_same_v<decltype(x), trait::copy_const_t<TestType, int>&>);
+            CHECK(x == 1);
+            f = true;
+            if constexpr (!std::is_const_v<TestType>) {
+                x = 2;
+            }
+        }
+        CHECK(f);
+
+        if constexpr (!std::is_const_v<TestType>) {
+            CHECK(*b == 2);
+        }
     }
 }
 
-TEMPLATE_TEST_CASE("MaybeRange_rvalue", "[container]", std::optional<int>, std::shared_ptr<int>)
+TEMPLATE_TEST_CASE("MaybeRange_rvalue", "[container]", std::optional<int>, std::shared_ptr<int>, std::unique_ptr<int>)
 {
-    bool f = true;
-    for (auto&& x[[maybe_unused]] : MaybeRange(gen_test_nul<TestType>())) {
-        f = false;
+    SECTION("null")
+    {
+        for (auto&& x[[maybe_unused]] : MaybeRange(gen_test_nul<TestType>())) {
+            FAIL();
+        }
     }
-    CHECK(f);
-    f = false;
+    SECTION("has value")
+    {
+        bool f = false;
+        for (auto&& x : MaybeRange(gen_test_val<TestType>())) {
+            STATIC_REQUIRE(std::is_same_v<decltype(x), int&>);
+            CHECK(x == 1);
+            f = true;
+        }
+        CHECK(f);
+    }
+}
 
-    for (auto&& x : MaybeRange(gen_test_val<TestType>())) {
-        static_assert(std::is_same_v<decltype(x), const int&>);
+TEST_CASE("MaybeRange_shared", "[container]")
+{
+    auto a = std::make_shared<int>(1);
+    auto b = a;
+    for (auto&& x : MaybeRange(std::move(b))) {
         CHECK(x == 1);
-        f = true;
+        x = 2;
     }
-    CHECK(f);
+    CHECK(*a == 2);
 }

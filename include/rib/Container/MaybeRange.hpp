@@ -40,14 +40,16 @@ private:
 };
 template <class T>
 struct MaybeRange<T&&>
-    : public rib::mixin::MaybeConstIterable<MaybeRange<T&&>, std::decay_t<decltype(*std::declval<T>())>>,
+    : public std::conditional_t<std::is_const_v<std::remove_reference_t<decltype(*std::declval<T>())>>,
+                                rib::mixin::MaybeConstIterable<MaybeRange<T&&>, std::decay_t<decltype(*std::declval<T>())>>,
+                                rib::mixin::MaybeIterable<MaybeRange<T&&>, std::decay_t<decltype(*std::declval<T>())>>>,
       private rib::mixin::NonCopyableNonMovable<MaybeRange<T&&>>
 {
     constexpr MaybeRange() = delete;
     constexpr MaybeRange(T&& x) : val(std::move(x)) {}
 
-    constexpr operator bool() const { return static_cast<bool>(val); }
-    constexpr decltype(auto) operator*() const { return (*val); }
+    constexpr operator bool() { return static_cast<bool>(val); }
+    constexpr decltype(auto) operator*() { return (*val); }
 
 private:
     T val;
