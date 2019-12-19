@@ -17,34 +17,50 @@ long double make_function_value_series(F_Actual fa, F_Expected fe)
 
 TEST_CASE("maclaurin", "[Math]")
 {
+    constexpr double l = -1., r = 1., d = 0.1;
     SECTION("exponential")
     {
-        REQUIRE(make_function_value_series(
-                    [](auto x) { return rib::math::maclaurin::exp(x, 16); },
-                    [](auto x) { return std::exp(x); }) < 1e-16);
+        for (auto x = l; x <= r; x += d) {
+            DYNAMIC_SECTION("x = " << x)
+            {
+                REQUIRE(rib::math::maclaurin::exp(x, 16) == Approx(std::exp(x)));
+            }
+        }
     }
     SECTION("sin")
     {
-        REQUIRE(make_function_value_series(
-                    [](auto x) { return rib::math::maclaurin::sin(x, 16); },
-                    [](auto x) { return std::sin(x); }) < 1e-16);
+        for (auto x = l; x <= r; x += d) {
+            DYNAMIC_SECTION("x = " << x)
+            {
+                REQUIRE(rib::math::maclaurin::sin(x, 16) == Approx(std::sin(x)));
+            }
+        }
     }
     SECTION("cos")
     {
-        REQUIRE(make_function_value_series(
-                    [](auto x) { return rib::math::maclaurin::cos(x, 16); },
-                    [](auto x) { return std::cos(x); }) < 1e-16);
+        for (auto x = l; x <= r; x += d) {
+            DYNAMIC_SECTION("x = " << x)
+            {
+                REQUIRE(rib::math::maclaurin::cos(x, 16) == Approx(std::cos(x)));
+            }
+        }
     }
     SECTION("sinh")
     {
-        REQUIRE(make_function_value_series(
-                    [](auto x) { return rib::math::maclaurin::sinh(x, 16); },
-                    [](auto x) { return std::sinh(x); }) < 1e-16);
+        for (auto x = l; x <= r; x += d) {
+            DYNAMIC_SECTION("x = " << x)
+            {
+                REQUIRE(rib::math::maclaurin::sinh(x, 16) == Approx(std::sinh(x)));
+            }
+        }
     }
     SECTION("cosh")
     {
-        REQUIRE(make_function_value_series(
-                    [](auto x) { return rib::math::maclaurin::cosh(x, 16); },
-                    [](auto x) { return std::cosh(x); }) < 1e-16);
+        for (auto x = l; x <= r; x += d) {
+            DYNAMIC_SECTION("x = " << x)
+            {
+                REQUIRE(rib::math::maclaurin::cosh(x, 16) == Approx(std::cosh(x)));
+            }
+        }
     }
 }
