@@ -17,5 +17,6 @@ include_directories(
 enable_testing()
 
 add_subdirectory(tests/Container-tests)
+add_subdirectory(tests/Monad-tests)
 add_subdirectory(tests/Utils-tests)
 add_subdirectory(tests/Math-tests)
