@@ -61,7 +61,7 @@ using CopyMoveTraitInherit = CopyMoveTrait<(std::is_copy_constructible_v<Args> &
                                            (std::is_move_assignable_v<Args> && ...), Tag>;
 
 static_assert([] {
-    struct A : private CopyMoveTrait<false, false, false, false, int>
+    struct A : private CopyMoveTrait<false, false, false, false, A>
     {
     };
     return !std::is_copy_constructible_v<A> &&
