@@ -1,6 +1,6 @@
 #define CATCH_CONFIG_MAIN // This tells Catch to provide a main() - only do this in one cpp file
 #include <catch2/catch.hpp>
-#include "rib/Container/Expected.hpp"
+#include "rib/Monad/Expected.hpp"
 
 #include "test_util.hpp"
 
@@ -8,7 +8,7 @@ using namespace rib;
 
 using TestTypeList = make_type_permutation_t<std::pair, 2, true, int, std::string, std::tuple<int, std::string>>;
 
-TEMPLATE_LIST_TEST_CASE("Expected constructivle trait", "[Container]", TestTypeList)
+TEMPLATE_LIST_TEST_CASE("Expected constructivle trait", "[Monad]", TestTypeList)
 {
     using Ok = typename TestType::first_type;
     using Err = typename TestType::second_type;
@@ -34,7 +34,7 @@ TEMPLATE_LIST_TEST_CASE("Expected constructivle trait", "[Container]", TestTypeL
     CHECK(std::is_assignable_v<Exp, Unexpect<Err>>);
 }
 
-TEST_CASE("Expected copy-move trait", "[Container]")
+TEST_CASE("Expected copy-move trait", "[Monad]")
 {
     SECTION("non-copy non-move")
     {
@@ -57,7 +57,7 @@ TEST_CASE("Expected copy-move trait", "[Container]")
     }
 }
 
-TEST_CASE("Expected construction & access", "[Container]")
+TEST_CASE("Expected construction & access", "[Monad]")
 {
     SECTION("Normal")
     {
@@ -125,7 +125,7 @@ TEST_CASE("Expected construction & access", "[Container]")
     }
 }
 
-TEST_CASE("Expected assign", "[container]")
+TEST_CASE("Expected assign", "[Monad]")
 {
     Expected<int, int> e = Unexpect(1);
 
@@ -138,7 +138,7 @@ TEST_CASE("Expected assign", "[container]")
     CHECK(e.error() == 2);
 }
 
-TEST_CASE("Expected to optional", "[container]")
+TEST_CASE("Expected to optional", "[Monad]")
 {
     Expected<int, std::string> e1 = 1, e2 = Unexpect("Err");
     CHECK(std::is_same_v<decltype(e1.optional()), std::optional<int>>);
@@ -150,7 +150,7 @@ TEST_CASE("Expected to optional", "[container]")
     CHECK(e2.optional_err() == "Err");
 }
 
-TEST_CASE("Expected to Unexpect", "[container]")
+TEST_CASE("Expected to Unexpect", "[Monad]")
 {
     Expected<int, int> e1 = 1;
     Expected<int, int> e2 = Unexpect(1);
@@ -159,7 +159,7 @@ TEST_CASE("Expected to Unexpect", "[container]")
     CHECK(e2.unexpected().value() == 1);
 }
 
-TEST_CASE("Expected equal compare", "[container]")
+TEST_CASE("Expected equal compare", "[Monad]")
 {
     Expected<int, int> e1 = 1, e2 = 2;
     Expected<int, int> u1 = Unexpect(1), u2 = Unexpect(2);
@@ -194,7 +194,7 @@ TEST_CASE("Expected equal compare", "[container]")
     }
 }
 
-TEST_CASE("Expected swap", "[container]")
+TEST_CASE("Expected swap", "[Monad]")
 {
     Expected<int, int> e1 = 1;
     Expected<int, int> e2 = Unexpect(1);
@@ -210,7 +210,7 @@ TEST_CASE("Expected swap", "[container]")
     CHECK(e2 == 1);
 }
 
-TEST_CASE("Expected monad - map", "[container]")
+TEST_CASE("Expected monad - map", "[Monad]")
 {
     Expected<int, int> e1 = 1, e2 = Unexpect(1);
     auto lmd = [](int x) { return std::to_string(x); };
@@ -229,7 +229,7 @@ TEST_CASE("Expected monad - map", "[container]")
     }
 }
 
-TEST_CASE("Expected monad - and_then-or_else", "[container]")
+TEST_CASE("Expected monad - and_then-or_else", "[Monad]")
 {
     Expected<int, int> e1 = 1, e2 = 2, e3 = Unexpect(1), e4 = Unexpect(2);
     auto lmd1 = [](int x) -> Expected<std::string, int> {
@@ -259,7 +259,7 @@ TEST_CASE("Expected monad - and_then-or_else", "[container]")
     }
 }
 
-TEST_CASE("Expected monad - mach", "[container]")
+TEST_CASE("Expected monad - mach", "[Monad]")
 {
     Expected<int, std::string> e1 = 1, e2 = Unexpect("2");
     auto lmd1 = [](int x) { return x + 1; };
