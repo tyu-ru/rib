@@ -273,9 +273,9 @@ public:
     }
 
     /// pointer (no exception)
-    constexpr const T* operator->() noexcept { return &value_noexcept(); }
+    constexpr const T* operator->() const noexcept { return &value_noexcept(); }
     /// pointer (no exception)
-    constexpr T* operator->() const noexcept { return &value_noexcept(); }
+    constexpr T* operator->() noexcept { return &value_noexcept(); }
 
     /// error value (no exception)
     constexpr const E& error_noexcept() const& noexcept { return std::get<Err>(payload).v; }
